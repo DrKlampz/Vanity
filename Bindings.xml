@@ -1,0 +1,8 @@
+<Bindings>
+    <Binding name="VANITY_TOGGLE" header="VANITY" category="ADDONS">
+        Vanity_Toggle()
+    </Binding>
+    <Binding name="VANITY_PHOTO" category="ADDONS">
+        Vanity_TogglePhoto()
+    </Binding>
+</Bindings>

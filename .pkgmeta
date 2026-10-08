@@ -1,0 +1,4 @@
+package-as: Vanity
+
+ignore:
+  - README.md

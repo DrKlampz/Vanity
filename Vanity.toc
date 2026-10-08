@@ -1,0 +1,16 @@
+## Interface: 16001
+## Title: |cffd9a441Vanity|r
+## Notes: A character showcase for WoW: Forever. Full-screen rotatable model, gear with item levels and missing enchant/gem warnings, stats, and a photo studio. Slash command: /vanity
+## Author: David
+## Version: @project-version@
+## Category: Miscellaneous
+## IconTexture: Interface\Icons\INV_Misc_Mask_01
+## AddonCompartmentFunc: Vanity_OnAddonCompartmentClick
+## SavedVariables: VanityDB
+## X-License: MIT
+
+Core.lua
+Gear.lua
+View.lua
+Photo.lua
+Bindings.xml
