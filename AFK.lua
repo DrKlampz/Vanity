@@ -31,13 +31,8 @@ local function Build()
     overlay.title:SetText("|cffff5555AFK|r")
     overlay.timer = Text("GameFontNormalHuge", "BOTTOM", 0, 150)
     overlay.clock = Text("GameFontHighlightLarge", "TOPRIGHT", -50, -40)
-    overlay.name = Text("GameFontNormalHuge", "BOTTOMLEFT", 50, 80)
-    overlay.sub = Text("GameFontHighlight", "BOTTOMLEFT", 50, 56)
-    overlay.stat = Text("GameFontHighlight", "BOTTOMRIGHT", -50, 56)
-    overlay.stat:SetJustifyH("RIGHT")
     overlay.tip = Text("GameFontDisableSmall", "BOTTOM", 0, 40)
     overlay.tip:SetText("Move or press a key to come back")
-    overlay.name:SetJustifyH("LEFT") overlay.sub:SetJustifyH("LEFT")
     local acc = 0
     overlay:SetScript("OnUpdate", function(_, elapsed)
         acc = acc + (elapsed or 0)
@@ -77,13 +72,10 @@ function A.Enter()
     startedAt = GetTime()
     nextPose, poseIdx, standing = GetTime() + 4, 0, true
     if openedByUs then f:Show() end
-    View.SetPanels(false)
+    View.SetPanels(true)       -- gear, stats and item level stay up; only the buttons go
+    View.AFKLayout(true)
+    View.Refresh()
     View.forceSpin = true
-    local ilvl = V.Gear.AverageItemLevel()
-    overlay.name:SetText(UnitName("player") or "")
-    local cls = UnitClass and UnitClass("player") or ""
-    overlay.sub:SetText(("Level %s %s %s"):format(tostring(UnitLevel("player")), tostring(UnitRace("player")), tostring(cls)))
-    overlay.stat:SetText(("Item level %.1f"):format(ilvl))
     overlay:Show()
     View.UpdateUI()
     f:EnableKeyboard(true)
@@ -102,6 +94,7 @@ function A.Leave()
     f:SetScript("OnKeyDown", nil)
     local model = View.GetModel()
     if model then pcall(model.SetAnimation, model, 0) end
+    View.AFKLayout(false)
     View.SetPanels(true)
     View.Refresh()
     View.ApplyPrefs()

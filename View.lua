@@ -348,6 +348,13 @@ end
 
 function View.IsShown() return frame and frame:IsShown() end
 
+-- AFK screen: keep the showcase (gear, stats, item level) but drop the buttons and hint
+function View.AFKLayout(on)
+    if not frame then return end
+    for _, b in pairs(View.buttons or {}) do b:SetShown(not on) end
+    hint:SetShown(not on and V.db.showHint)
+end
+
 -- Hide the game's own interface (like Alt+Z) while keeping Vanity on screen. Vanity moves to
 -- the world frame for the duration so hiding the normal interface doesn't hide it too.
 local uiHidden = false
@@ -389,9 +396,10 @@ V.On("PLAYER_REGEN_DISABLED", function() if uiHidden then pcall(UIParent.Show, U
 -- Re-apply the display options (stats panel, slot names, hint)
 function View.ApplyPrefs()
     if not frame then return end
-    local panels = not (V.Photo and V.Photo.IsActive()) and not (V.AFK and V.AFK.IsActive())
+    local panels = not (V.Photo and V.Photo.IsActive())
+    local afk = V.AFK and V.AFK.IsActive()
     stats:SetShown(panels and V.db.showStats)
-    hint:SetShown(panels and V.db.showHint)
+    hint:SetShown(panels and not afk and V.db.showHint)
     for _, b in pairs(slots) do b.label:SetShown(panels and V.db.showLabels) end
 end
 

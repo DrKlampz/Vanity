@@ -1,5 +1,8 @@
 # Vanity
 
+## v0.2.2
+- The AFK screen keeps your showcase: equipped items with item levels, stats, item level and durability stay on screen alongside the timer and clock. Only the buttons and the game's own interface are hidden.
+
 ## v0.2.1
 - Item glows now wrap the whole slot (they were drawn at button size, so they looked tiny).
 - AFK mode and photo mode hide the game interface (like Alt+Z) so only your character and the Vanity overlay show. The interface comes back when you leave, close the window, enter combat, or type `/vanity ui`. Setting: Game interface > Hide in AFK/photo, or Leave it on.
