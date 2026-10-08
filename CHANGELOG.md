@@ -3,6 +3,7 @@
 ## v0.2.2
 - The AFK screen keeps your showcase: equipped items with item levels, stats, item level and durability stay on screen alongside the timer and clock. Only the buttons and the game's own interface are hidden.
 - Print Screen and modifier keys no longer end the AFK screen, so you can screenshot it.
+- AFK and photo mode also switch off floating player names and nameplates (through the game's own settings, restored afterwards), and the "move or press a key" hint no longer overlaps the weapon slots.
 - Fixed: a gear change while in photo mode brought the slots back.
 
 ## v0.2.1

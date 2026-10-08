@@ -33,11 +33,11 @@ local function Build()
         fs:SetPoint(point, f, point, x, y)
         return fs
     end
-    overlay.title = Text("GameFontNormalHuge", "BOTTOM", 0, 190)
+    overlay.title = Text("GameFontNormalHuge", "BOTTOM", 0, 230)
     overlay.title:SetText("|cffff5555AFK|r")
-    overlay.timer = Text("GameFontNormalHuge", "BOTTOM", 0, 150)
+    overlay.timer = Text("GameFontNormalHuge", "BOTTOM", 0, 190)
     overlay.clock = Text("GameFontHighlightLarge", "TOPRIGHT", -50, -40)
-    overlay.tip = Text("GameFontDisableSmall", "BOTTOM", 0, 40)
+    overlay.tip = Text("GameFontDisableSmall", "BOTTOM", 0, 118)
     overlay.tip:SetText("Move or press a key to come back (Print Screen is safe)")
     local acc = 0
     overlay:SetScript("OnUpdate", function(_, elapsed)

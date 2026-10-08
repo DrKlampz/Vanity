@@ -99,6 +99,7 @@ SlashCmdList.VANITY = function(input)
         if V.View then V.View.Build() V.View.GetFrame():Show() end
         if V.Settings then V.Settings.Toggle() end
     elseif cmd == "ui" then
+        if V.View and V.View.RestoreNames then V.View.RestoreNames() end
         if UIParent and not UIParent:IsShown() then UIParent:Show() end
         V.Print("Game interface restored.")
     elseif cmd == "reset" then

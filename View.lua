@@ -360,6 +360,34 @@ end
 -- Hide the game's own interface (like Alt+Z) while keeping Vanity on screen. Vanity moves to
 -- the world frame for the duration so hiding the normal interface doesn't hide it too.
 local uiHidden = false
+-- Names and nameplates float in the world rather than in the interface, so they are switched
+-- off through the game's own settings while the interface is hidden, then put back.
+local NAME_CVARS = {
+    "nameplateShowFriends", "nameplateShowEnemies", "nameplateShowAll",
+    "UnitNameFriendlyPlayerName", "UnitNameEnemyPlayerName", "UnitNameNPC", "UnitNameOwn",
+    "UnitNameNonCombatCreatureName", "UnitNameFriendlyPetName", "UnitNameFriendlyGuardianName",
+    "UnitNameFriendlyTotemName", "UnitNameEnemyGuardianName", "UnitNameEnemyPetName",
+    "UnitNameEnemyTotemName", "UnitNameFriendlyMinionName", "UnitNameEnemyMinionName",
+}
+local savedNames
+local function HideNames()
+    if savedNames or not (GetCVar and SetCVar) then return end
+    savedNames = {}
+    for _, name in ipairs(NAME_CVARS) do
+        local ok, cur = pcall(GetCVar, name)
+        if ok and cur ~= nil then
+            savedNames[name] = cur
+            pcall(SetCVar, name, 0)
+        end
+    end
+end
+local function RestoreNames()
+    if not savedNames then return end
+    for name, val in pairs(savedNames) do pcall(SetCVar, name, val) end
+    savedNames = nil
+end
+View.RestoreNames = RestoreNames
+
 function View.UIHidden() return uiHidden end
 function View.SetUIHidden(on)
     if not frame then return end
@@ -376,7 +404,9 @@ function View.SetUIHidden(on)
             frame:SetAllPoints(WorldFrame)
         end
         pcall(UIParent.Hide, UIParent)
+        HideNames()
     else
+        RestoreNames()
         pcall(UIParent.Show, UIParent)
         frame:SetParent(UIParent)
         frame:SetScale(1)
@@ -392,8 +422,8 @@ function View.UpdateUI()
     local want = frame and frame:IsShown() and ((V.AFK and V.AFK.IsActive()) or (V.Photo and V.Photo.IsActive()))
     View.SetUIHidden(want and true or false)
 end
-V.On("PLAYER_LOGOUT", function() if uiHidden then pcall(UIParent.Show, UIParent) end end)
-V.On("PLAYER_REGEN_DISABLED", function() if uiHidden then pcall(UIParent.Show, UIParent) uiHidden = false if frame then frame:SetParent(UIParent) frame:SetScale(1) frame:SetAllPoints(UIParent) end end end)
+V.On("PLAYER_LOGOUT", function() RestoreNames() if uiHidden then pcall(UIParent.Show, UIParent) end end)
+V.On("PLAYER_REGEN_DISABLED", function() if uiHidden then RestoreNames() pcall(UIParent.Show, UIParent) uiHidden = false if frame then frame:SetParent(UIParent) frame:SetScale(1) frame:SetAllPoints(UIParent) end end end)
 
 -- Re-apply the display options (stats panel, slot names, hint)
 function View.ApplyPrefs()
