@@ -13,4 +13,6 @@ Core.lua
 Gear.lua
 View.lua
 Photo.lua
+AFK.lua
+Settings.lua
 Bindings.xml

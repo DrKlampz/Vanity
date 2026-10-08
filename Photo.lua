@@ -4,8 +4,28 @@ local P = {}
 V.Photo = P
 local View = V.View
 
-local BACKGROUNDS = { "dark", "class", "light", "green", "world" }
-local BG_LABEL = { dark = "Dark", class = "Class color", light = "Light", green = "Green screen", world = "The world" }
+-- Each theme: stage colors (base, floor glow) or a flat color. "class" and "faction" are computed.
+local THEMES = {
+    { id = "dark",     label = "Midnight",     base = { 0.05, 0.05, 0.08 }, floor = { 0.30, 0.28, 0.40 } },
+    { id = "class",    label = "Class color" },
+    { id = "faction",  label = "Faction" },
+    { id = "ember",    label = "Ember",        base = { 0.10, 0.04, 0.02 }, floor = { 0.95, 0.40, 0.08 } },
+    { id = "frost",    label = "Frost",        base = { 0.03, 0.07, 0.12 }, floor = { 0.30, 0.65, 0.95 } },
+    { id = "forest",   label = "Forest",       base = { 0.03, 0.09, 0.05 }, floor = { 0.30, 0.80, 0.35 } },
+    { id = "void",     label = "Void",         base = { 0.06, 0.03, 0.10 }, floor = { 0.65, 0.30, 0.95 } },
+    { id = "gold",     label = "Gilded",       base = { 0.10, 0.08, 0.03 }, floor = { 0.95, 0.75, 0.25 } },
+    { id = "sunset",   label = "Sunset",       base = { 0.12, 0.05, 0.08 }, floor = { 1.00, 0.45, 0.45 } },
+    { id = "slate",    label = "Slate",        base = { 0.10, 0.11, 0.13 }, floor = { 0.55, 0.60, 0.68 } },
+    { id = "black",    label = "Pure black",   flat = { 0, 0, 0 } },
+    { id = "light",    label = "Studio white", flat = { 0.86, 0.86, 0.88 } },
+    { id = "green",    label = "Green screen", flat = { 0, 0.9, 0.1 } },
+    { id = "world",    label = "The world",    flat = false },
+}
+P.THEMES = THEMES
+local BY_ID = {}
+for _, t in ipairs(THEMES) do BY_ID[t.id] = t end
+local BG_LABEL = setmetatable({}, { __index = function(_, k) return BY_ID[k] and BY_ID[k].label or tostring(k) end })
+
 -- Animation ids the player model understands
 local POSES = {
     { "Stand", 0 }, { "Walk", 4 }, { "Run", 5 }, { "Wave", 67 }, { "Cheer", 68 }, { "Dance", 69 },
@@ -36,39 +56,51 @@ end
 function P.ApplyBackground()
     local bg = View.bg
     if not bg then return end
-    local kind = V.db.background
-    local cr, cg, cb = ClassColor()
+    local theme = BY_ID[V.db.background] or BY_ID.dark
     local layers = { View.top, View.floor, View.edgeL, View.edgeR }
     local function showLayers(on) for _, t in ipairs(layers) do if t then t:SetShown(on) end end end
-    if kind == "world" then
-        bg:SetColorTexture(0, 0, 0, 0) showLayers(false)
-    elseif kind == "light" then
-        bg:SetColorTexture(0.82, 0.82, 0.84, 1) showLayers(false)
-    elseif kind == "green" then
-        bg:SetColorTexture(0, 0.9, 0.1, 1) showLayers(false)
-    else
-        -- "dark" is a neutral warm stage, "class" tints the whole stage with your class color
-        local tint = (kind == "class") and 0.28 or 0.10
-        local ar, ag, ab = cr * tint + 0.04, cg * tint + 0.04, cb * tint + 0.05
-        bg:SetColorTexture(ar * 0.5, ag * 0.5, ab * 0.5, 1)
-        showLayers(true)
-        -- ceiling fades to black going up
-        Grad(View.top, "VERTICAL", 0, 0, 0, 0, 0, 0, 0, 0.85)
-        -- floor glows with the accent color where the character stands
-        local glow = (kind == "class") and 0.55 or 0.30
-        Grad(View.floor, "VERTICAL", ar + cr * glow * 0.6, ag + cg * glow * 0.6, ab + cb * glow * 0.6, 0.9, 0, 0, 0, 0)
-        -- vignette on both sides
-        Grad(View.edgeL, "HORIZONTAL", 0, 0, 0, 0.75, 0, 0, 0, 0)
-        Grad(View.edgeR, "HORIZONTAL", 0, 0, 0, 0, 0, 0, 0, 0.75)
+    if theme.flat == false then
+        bg:SetColorTexture(0, 0, 0, 0) showLayers(false) return
+    elseif theme.flat then
+        bg:SetColorTexture(theme.flat[1], theme.flat[2], theme.flat[3], 1) showLayers(false) return
     end
+    local base, floor = theme.base, theme.floor
+    if theme.id == "class" then
+        local cr, cg, cb = ClassColor()
+        base, floor = { cr * 0.18 + 0.03, cg * 0.18 + 0.03, cb * 0.18 + 0.04 }, { cr, cg, cb }
+    elseif theme.id == "faction" then
+        local f = UnitFactionGroup and UnitFactionGroup("player")
+        if f == "Alliance" then base, floor = { 0.03, 0.06, 0.14 }, { 0.25, 0.50, 1.0 }
+        else base, floor = { 0.12, 0.03, 0.03 }, { 0.95, 0.20, 0.15 } end
+    end
+    local k = V.db.brightness or 1
+    local function c(v) return math.min(1, v * k) end
+    bg:SetColorTexture(c(base[1]), c(base[2]), c(base[3]), 1)
+    showLayers(true)
+    local stage = V.db.stageLight ~= false
+    Grad(View.top, "VERTICAL", 0, 0, 0, 0, 0, 0, 0, 0.85)
+    if stage then
+        Grad(View.floor, "VERTICAL", c(floor[1] * 0.75), c(floor[2] * 0.75), c(floor[3] * 0.75), 0.9, 0, 0, 0, 0)
+    else
+        Grad(View.floor, "VERTICAL", 0, 0, 0, 0, 0, 0, 0, 0)
+    end
+    local e = V.db.vignette ~= false and 0.75 or 0
+    Grad(View.edgeL, "HORIZONTAL", 0, 0, 0, e, 0, 0, 0, 0)
+    Grad(View.edgeR, "HORIZONTAL", 0, 0, 0, 0, 0, 0, 0, e)
+end
+
+function P.SetBackground(id)
+    if not BY_ID[id] then return end
+    V.db.background = id
+    P.ApplyBackground()
+    if bar and bar.bgBtn then bar.bgBtn:SetText(BG_LABEL[id]) end
+    if P.OnThemeChanged then P.OnThemeChanged() end
 end
 
 function P.CycleBackground()
     local idx = 1
-    for i, k in ipairs(BACKGROUNDS) do if k == V.db.background then idx = i end end
-    V.db.background = BACKGROUNDS[idx % #BACKGROUNDS + 1]
-    P.ApplyBackground()
-    if bar and bar.bgBtn then bar.bgBtn:SetText(BG_LABEL[V.db.background]) end
+    for i, t in ipairs(THEMES) do if t.id == V.db.background then idx = i end end
+    P.SetBackground(THEMES[idx % #THEMES + 1].id)
     V.Print("Background: " .. BG_LABEL[V.db.background])
 end
 
@@ -134,6 +166,23 @@ function P.Toggle()
 end
 
 function P.IsActive() return active end
+
+-- Camera presets: zoom (smaller = closer) and how far the model is lowered so the framing is right.
+P.CAMERAS = {
+    { "full",  "Full body", 1.0,  0 },
+    { "waist", "Waist up",  0.62, -0.30 },
+    { "bust",  "Bust",      0.42, -0.50 },
+    { "face",  "Portrait",  0.26, -0.62 },
+}
+function P.SetCamera(id)
+    for _, c in ipairs(P.CAMERAS) do
+        if c[1] == id then
+            V.db.camera = id
+            View.SetCamera(c[3], 0, c[4])
+            return
+        end
+    end
+end
 
 -- Hide the controls, take the picture, bring them back.
 function P.Screenshot()

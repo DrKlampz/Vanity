@@ -13,6 +13,12 @@ Open it with `/vanity`, the **Vanity** button on the character window, the minim
 - **Photo mode** (`/vanity photo`): hides every panel, then a studio bar with backgrounds (dark, class color, light, green screen, or the live world), poses (wave, dance, cheer, bow, sit ...), turntable, and a screenshot button that hides the controls first.
 - **View target:** look at another player's model.
 
+## AFK screen
+Go AFK (or `/vanity afk` to preview) and Vanity fills the screen with your character, an AFK timer and a clock, and cycles poses. Move or press any key to return.
+
+## Settings
+`/vanity settings`: 14 backgrounds, brightness, camera framing, turntable, panels, AFK options.
+
 ## Planned
 Vanity is built from scratch (it shares no code or art with any other addon). Coming in later versions: a title and achievement showcase, saved looks/outfits, creature viewer, per-character profiles, themes.
 

@@ -27,9 +27,15 @@ local function ApplyCamera()
     pcall(model.SetPosition, model, 0, panX, panY)
 end
 
-function View.ResetCamera()
-    facing, zoom, panX, panY = 0, 1, 0, 0
+function View.SetCamera(z, x, y)
+    zoom, panX, panY = z, x or 0, y or 0
     ApplyCamera()
+end
+
+function View.ResetCamera()
+    local id = V.db and V.db.camera or "full"
+    facing = 0
+    if V.Photo then V.Photo.SetCamera(id) else zoom, panX, panY = 1, 0, 0 ApplyCamera() end
 end
 
 function View.AddFacing(d) facing = facing + d; if model then pcall(model.SetFacing, model, facing) end end
@@ -235,6 +241,7 @@ local function Build()
     model:EnableMouse(true)
     model:EnableMouseWheel(true)
     model:SetScript("OnMouseDown", function(self, button)
+        if V.AFK and V.AFK.IsActive() then V.AFK.Leave() return end
         dragging = { button = button, x = GetCursorPosition(), y = select(2, GetCursorPosition()), facing = facing, px = panX, py = panY }
     end)
     model:SetScript("OnMouseUp", function() dragging = nil end)
@@ -252,8 +259,8 @@ local function Build()
                 facing = dragging.facing + (x - dragging.x) / 100
             end
             ApplyCamera()
-        elseif V.db and V.db.spin and not View.photoLock then
-            facing = facing + (V.db.spinSpeed or 0.35) * (elapsed or 0)
+        elseif V.db and (V.db.spin or View.forceSpin) and not View.photoLock then
+            facing = facing + (View.forceSpin and 0.18 or (V.db.spinSpeed or 0.35)) * (elapsed or 0)
             pcall(model.SetFacing, model, facing)
         end
     end)
@@ -308,12 +315,15 @@ local function Build()
     who:SetPoint("RIGHT", photo, "LEFT", -6, 0)
     local reset = Button(frame, "Reset view", 90, View.ResetCamera)
     reset:SetPoint("RIGHT", who, "LEFT", -6, 0)
-    View.buttons = { close = close, photo = photo, who = who, reset = reset }
+    local set = Button(frame, "Settings", 90, function() if V.Settings then V.Settings.Toggle() end end)
+    set:SetPoint("RIGHT", reset, "LEFT", -6, 0)
+    View.buttons = { close = close, photo = photo, who = who, reset = reset, settings = set }
 
-    frame:SetScript("OnShow", function() SetModelUnit() View.Refresh() end)
+    frame:SetScript("OnShow", function() SetModelUnit() View.Refresh() View.ApplyPrefs() if V.Photo then V.Photo.SetCamera(V.db.camera or "full") end end)
     frame:SetScript("OnHide", function()
         dragging = nil
         if V.Photo then V.Photo.Leave() end
+        V.Fire("viewHidden")
     end)
 end
 View.Build = Build
@@ -328,12 +338,22 @@ function View.SetPanels(shown)
     if not frame then return end
     for _, b in pairs(slots) do b:SetShown(shown and looking == "player") end
     for _, k in ipairs({ "name", "sub", "ilvl", "ilvlLabel", "dur", "problems" }) do header[k]:SetShown(shown) end
-    stats:SetShown(shown)
+    stats:SetShown(shown and V.db.showStats)
+    for _, b in pairs(slots) do b.label:SetShown(shown and V.db.showLabels) end
     hint:SetShown(shown and V.db.showHint)
     for _, b in pairs(View.buttons or {}) do b:SetShown(shown) end
 end
 
 function View.IsShown() return frame and frame:IsShown() end
+
+-- Re-apply the display options (stats panel, slot names, hint)
+function View.ApplyPrefs()
+    if not frame then return end
+    local panels = not (V.Photo and V.Photo.IsActive()) and not (V.AFK and V.AFK.IsActive())
+    stats:SetShown(panels and V.db.showStats)
+    hint:SetShown(panels and V.db.showHint)
+    for _, b in pairs(slots) do b.label:SetShown(panels and V.db.showLabels) end
+end
 
 -- Keep the numbers current while the window is open
 for _, ev in ipairs({ "PLAYER_EQUIPMENT_CHANGED", "UNIT_INVENTORY_CHANGED", "UPDATE_INVENTORY_DURABILITY",

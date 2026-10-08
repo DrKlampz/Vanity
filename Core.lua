@@ -8,6 +8,15 @@ V.DEFAULTS = {
     spin = true,             -- slow turntable while you are not dragging the model
     spinSpeed = 0.35,        -- radians per second
     showHint = true,
+    showStats = true,        -- the stats panel on the right
+    showLabels = true,       -- slot names next to the gear
+    brightness = 1,          -- 0.7 / 1 / 1.4 stage brightness
+    stageLight = true,       -- colored glow on the floor
+    vignette = true,         -- darkened edges
+    camera = "full",         -- full | waist | bust | face
+    afkScreen = true,        -- show the showcase while you are AFK
+    afkPoses = true,         -- cycle poses (sit, wave, laugh ...) on the AFK screen
+    clock24 = false,         -- 24-hour clock on the AFK screen
     charButton = true,       -- a Vanity button on the character window
     minimap = { show = true, angle = 200 },
 }
@@ -83,12 +92,19 @@ SlashCmdList.VANITY = function(input)
         V.db.minimap.show = not V.db.minimap.show
         V.Print("Minimap button " .. (V.db.minimap.show and "shown." or "hidden."))
         if V.View and V.View.UpdateMinimap then V.View.UpdateMinimap() end
+    elseif cmd == "afk" then
+        if V.AFK then V.AFK.Toggle() end
+    elseif cmd == "settings" or cmd == "options" or cmd == "config" then
+        if V.View then V.View.Build() V.View.GetFrame():Show() end
+        if V.Settings then V.Settings.Toggle() end
     elseif cmd == "reset" then
         if V.View then V.View.ResetCamera() end
     else
         V.Print("/vanity - open the showcase")
         V.Print("/vanity photo - photo mode (hides the panels, shows the studio bar)")
         V.Print("/vanity bg - cycle the background")
+        V.Print("/vanity afk - preview the AFK screen")
+        V.Print("/vanity settings - backgrounds, camera and AFK options")
         V.Print("/vanity spin - turntable on/off")
         V.Print("/vanity reset - reset the camera")
         V.Print("/vanity minimap - show or hide the minimap button")
