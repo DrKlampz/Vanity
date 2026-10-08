@@ -8,6 +8,7 @@
 ## AddonCompartmentFunc: Vanity_OnAddonCompartmentClick
 ## SavedVariables: VanityDB
 ## X-License: MIT
+## X-Wago-ID: kNMPB3Gz
 
 Core.lua
 Gear.lua
