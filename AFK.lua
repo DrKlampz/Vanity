@@ -4,6 +4,12 @@ local A = {}
 V.AFK = A
 local View = V.View
 
+-- Keys that should not count as "I'm back": taking a screenshot, and modifier keys
+local IGNORED_KEYS = {
+    PRINTSCREEN = true, LSHIFT = true, RSHIFT = true, LCTRL = true, RCTRL = true,
+    LALT = true, RALT = true, CAPSLOCK = true, SCROLLLOCK = true, NUMLOCK = true,
+}
+
 local POSES = { 72, 67, 70, 69, 68, 66, 75, 80 }   -- sit, wave, laugh, dance, cheer, bow, kneel, applaud
 local active, startedAt = false, 0
 local overlay, nextPose, poseIdx, standing = nil, 0, 0, true
@@ -32,7 +38,7 @@ local function Build()
     overlay.timer = Text("GameFontNormalHuge", "BOTTOM", 0, 150)
     overlay.clock = Text("GameFontHighlightLarge", "TOPRIGHT", -50, -40)
     overlay.tip = Text("GameFontDisableSmall", "BOTTOM", 0, 40)
-    overlay.tip:SetText("Move or press a key to come back")
+    overlay.tip:SetText("Move or press a key to come back (Print Screen is safe)")
     local acc = 0
     overlay:SetScript("OnUpdate", function(_, elapsed)
         acc = acc + (elapsed or 0)
@@ -80,7 +86,7 @@ function A.Enter()
     View.UpdateUI()
     f:EnableKeyboard(true)
     if f.SetPropagateKeyboardInput then pcall(f.SetPropagateKeyboardInput, f, true) end
-    f:SetScript("OnKeyDown", function() A.Leave() end)
+    f:SetScript("OnKeyDown", function(_, key) if key and IGNORED_KEYS[key] then return end A.Leave() end)
     A.Update()
 end
 
