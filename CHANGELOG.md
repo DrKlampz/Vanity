@@ -1,5 +1,8 @@
 # Vanity
 
+## v0.3.7
+- Item cards: every equipped item now shows its details permanently beside its slot - name in quality color, item level, main stats, enchant and any problems - no hovering needed. Works in the showcase and on the AFK screen. Turn off under Settings ("Item cards"). With cards on, the Attributes panel moves to the bottom left.
+
 ## v0.3.6
 - AFK screen: item and buff tooltips now show (the game's tooltip was hidden with the interface; Vanity uses its own). Your active buffs appear bottom right with tooltips.
 - Removed the "Everything enchanted and gemmed" line (missing enchants/gems still list and flag on the slots) and the "Print Screen is safe" line.

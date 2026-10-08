@@ -138,6 +138,16 @@ local function MakeSlot(slot, side)
     b.label = Font(b, "GameFontDisableSmall", G.NAMES[slot] or "")
     if side == "right" then b.label:SetPoint("RIGHT", b, "LEFT", -6, 0) else b.label:SetPoint("LEFT", b, "RIGHT", 6, 0) end
     if side == "bottom" then b.label:ClearAllPoints() b.label:SetPoint("TOP", b, "BOTTOM", 0, -2) end
+    -- always-visible item card (name, level, stats, enchant) beside the slot
+    b.card = Font(b, "GameFontHighlightSmall", "")
+    b.card:SetWidth(215)
+    b.card:SetSpacing(2)
+    b.card:SetWordWrap(false)
+    if side == "right" or side == "bottom" then
+        b.card:SetPoint("LEFT", b, "RIGHT", 10, 0) b.card:SetJustifyH("LEFT")
+    else
+        b.card:SetPoint("RIGHT", b, "LEFT", -10, 0) b.card:SetJustifyH("RIGHT")
+    end
     b:RegisterForClicks("LeftButtonUp")
     b:SetScript("OnEnter", SlotTooltip)
     b:SetScript("OnLeave", function() View.HideTips() end)
@@ -150,12 +160,47 @@ local function MakeSlot(slot, side)
     return b
 end
 
+-- Read an item's tooltip lines through a hidden tooltip and boil them down to a short card.
+local scan
+local function CardLines(slot, info)
+    local out = {}
+    local qr, qg, qb = G.QualityColor(info.quality)
+    local name = GetItemInfo and select(1, GetItemInfo(info.link)) or nil
+    if not name then name = info.link:match("%[(.-)%]") end
+    out[1] = ("|cff%02x%02x%02x%s|r"):format(math.floor(qr * 255), math.floor(qg * 255), math.floor(qb * 255), name or "?")
+    out[2] = ("|cffd9a441%s|r|cff999999%s|r"):format(info.ilvl and ("ilvl " .. info.ilvl) or "", G.NAMES[slot] and ("  -  " .. G.NAMES[slot]) or "")
+    if not scan then
+        scan = CreateFrame("GameTooltip", "VanityScanTip", UIParent, "GameTooltipTemplate")
+    end
+    local stats, ench = {}, nil
+    local ok = pcall(function()
+        scan:SetOwner(UIParent, "ANCHOR_NONE")
+        scan:ClearLines()
+        scan:SetInventoryItem("player", slot)
+        for i = 2, scan:NumLines() do
+            local fs = _G["VanityScanTipTextLeft" .. i]
+            local t = fs and fs:GetText()
+            if type(t) == "string" and not (issecretvalue and issecretvalue(t)) then
+                local e = t:match("^Enchanted: (.+)")
+                if e then ench = e
+                elseif #stats < 3 and t:match("^%+%d[%d,]* %a") then stats[#stats + 1] = t end
+            end
+        end
+    end)
+    if #stats > 0 then out[#out + 1] = "|cffffffff" .. table.concat(stats, ", ") .. "|r" end
+    if ench then out[#out + 1] = "|cff55ff55" .. (#ench > 34 and ench:sub(1, 33) .. "..." or ench) .. "|r" end
+    local probs = {}
+    for _, p in ipairs(info.problems or {}) do probs[#probs + 1] = p end
+    if #probs > 0 then out[#out + 1] = "|cffff5555" .. table.concat(probs, ", ") .. "|r" end
+    return table.concat(out, "\n")
+end
+
 local function Place(list, side, anchorX)
     for i, slot in ipairs(list) do
         local b = slots[slot] or MakeSlot(slot, side)
         b:ClearAllPoints()
         if side == "bottom" then
-            b:SetPoint("BOTTOM", frame, "BOTTOM", (i - (#list + 1) / 2) * 90, 40)
+            b:SetPoint("BOTTOM", frame, "BOTTOM", (i - (#list + 1) / 2) * 250 - 100, 40)
         else
             b:SetPoint("TOP", frame, "TOP", anchorX, -140 - (i - 1) * 58)
         end
@@ -188,8 +233,12 @@ local function RefreshSlots()
             b.ilvl:SetText("")
             b.warn:Hide()
         end
+        b.card:SetText(info.link and CardLines(slot, info) or "")
+        b.card:SetShown(V.db.showCards ~= false)
+        b.label:SetShown(V.db.showLabels and V.db.showCards == false)
         b:SetShown(panelsOn and looking == "player")
     end
+    View.LayoutStats()
 end
 
 ------------------------------------------------------------------------
@@ -228,7 +277,7 @@ local function RefreshHeader()
         local avg, low = G.Durability()
         header.dur:SetText(avg and ("Durability %d%% (lowest %d%%)"):format(math.floor(avg * 100 + 0.5), math.floor(low * 100 + 0.5)) or "")
         local probs = G.Problems()
-        if #probs == 0 then
+        if #probs == 0 or V.db.showCards ~= false then
             header.problems:SetText("")
         else
             local parts = {}
@@ -237,6 +286,19 @@ local function RefreshHeader()
         end
     else
         header.ilvl:SetText("") header.ilvlLabel:SetText("") header.dur:SetText("") header.problems:SetText("")
+    end
+end
+
+-- With item cards on, the attributes move to the bottom left so the right-hand cards have room
+function View.LayoutStats()
+    if not stats then return end
+    stats:ClearAllPoints()
+    if V.db.showCards ~= false then
+        stats:SetJustifyH("LEFT")
+        stats:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 56, 70)
+    else
+        stats:SetJustifyH("RIGHT")
+        stats:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -56, -176)
     end
 end
 
@@ -442,7 +504,7 @@ function View.SetPanels(shown)
     for _, b in pairs(slots) do b:SetShown(shown and looking == "player") end
     for _, k in ipairs({ "name", "sub", "ilvl", "ilvlLabel", "dur", "problems" }) do header[k]:SetShown(shown) end
     View.ShowStats(shown and V.db.showStats)
-    for _, b in pairs(slots) do b.label:SetShown(shown and V.db.showLabels) end
+    for _, b in pairs(slots) do b.label:SetShown(shown and V.db.showLabels and V.db.showCards == false) end
     hint:SetShown(shown and V.db.showHint)
     for _, b in pairs(View.buttons or {}) do b:SetShown(shown) end
 end
@@ -532,7 +594,7 @@ function View.ApplyPrefs()
     local afk = V.AFK and V.AFK.IsActive()
     View.ShowStats(panels and V.db.showStats)
     hint:SetShown(panels and not afk and V.db.showHint)
-    for _, b in pairs(slots) do b.label:SetShown(panels and V.db.showLabels) end
+    for _, b in pairs(slots) do b.label:SetShown(panels and V.db.showLabels and V.db.showCards == false) b.card:SetShown(panels and V.db.showCards ~= false) end View.LayoutStats()
 end
 
 -- Keep the numbers current while the window is open

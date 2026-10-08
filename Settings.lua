@@ -118,7 +118,8 @@ local function Build()
     y = y - 6
     Header("Showcase")
     Place(Check(panel, "Stats panel", "showStats", View.ApplyPrefs))
-    Place(Check(panel, "Slot names", "showLabels", View.ApplyPrefs))
+    Place(Check(panel, "Item cards (always show each item's details)", "showCards", function() View.ApplyPrefs() View.Refresh() end))
+    Place(Check(panel, "Slot names (when cards are off)", "showLabels", View.ApplyPrefs))
     Place(Check(panel, "Controls hint", "showHint", View.ApplyPrefs))
     Place(Check(panel, "Button on the character window", "charButton", function()
         if View.charBtn then View.charBtn:SetShown(V.db.charButton) end

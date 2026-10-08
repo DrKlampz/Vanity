@@ -9,6 +9,7 @@ V.DEFAULTS = {
     spinSpeed = 0.35,        -- radians per second
     showHint = true,
     showStats = true,        -- the stats panel on the right
+    showCards = true,        -- always-on item cards beside every slot (name, level, stats, enchant)
     showLabels = true,       -- slot names next to the gear
     brightness = 1,          -- 0.7 / 1 / 1.4 stage brightness
     stageLight = true,       -- colored glow on the floor
