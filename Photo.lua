@@ -17,19 +17,50 @@ local bar, active = nil, false
 local function ClassColor()
     local _, cls = UnitClass("player")
     local c = cls and RAID_CLASS_COLORS and RAID_CLASS_COLORS[cls]
-    if c then return c.r * 0.35, c.g * 0.35, c.b * 0.35 end
-    return 0.1, 0.1, 0.1
+    if c then return c.r, c.g, c.b end
+    return 0.85, 0.65, 0.25
+end
+
+-- Gradient between two RGBA colors, whichever way this client wants the arguments
+local function Grad(tex, orient, r1, g1, b1, a1, r2, g2, b2, a2)
+    if not tex then return end
+    local ok = false
+    if CreateColor and tex.SetGradient then
+        ok = pcall(tex.SetGradient, tex, orient, CreateColor(r1, g1, b1, a1), CreateColor(r2, g2, b2, a2))
+    end
+    if not ok and tex.SetGradientAlpha then
+        pcall(tex.SetGradientAlpha, tex, orient, r1, g1, b1, a1, r2, g2, b2, a2)
+    end
 end
 
 function P.ApplyBackground()
     local bg = View.bg
     if not bg then return end
     local kind = V.db.background
-    if kind == "world" then bg:SetColorTexture(0, 0, 0, 0)
-    elseif kind == "light" then bg:SetColorTexture(0.85, 0.85, 0.85, 1)
-    elseif kind == "green" then bg:SetColorTexture(0, 0.9, 0.1, 1)
-    elseif kind == "class" then local r, g, b = ClassColor() bg:SetColorTexture(r, g, b, 1)
-    else bg:SetColorTexture(0.03, 0.03, 0.05, 1) end
+    local cr, cg, cb = ClassColor()
+    local layers = { View.top, View.floor, View.edgeL, View.edgeR }
+    local function showLayers(on) for _, t in ipairs(layers) do if t then t:SetShown(on) end end end
+    if kind == "world" then
+        bg:SetColorTexture(0, 0, 0, 0) showLayers(false)
+    elseif kind == "light" then
+        bg:SetColorTexture(0.82, 0.82, 0.84, 1) showLayers(false)
+    elseif kind == "green" then
+        bg:SetColorTexture(0, 0.9, 0.1, 1) showLayers(false)
+    else
+        -- "dark" is a neutral warm stage, "class" tints the whole stage with your class color
+        local tint = (kind == "class") and 0.28 or 0.10
+        local ar, ag, ab = cr * tint + 0.04, cg * tint + 0.04, cb * tint + 0.05
+        bg:SetColorTexture(ar * 0.5, ag * 0.5, ab * 0.5, 1)
+        showLayers(true)
+        -- ceiling fades to black going up
+        Grad(View.top, "VERTICAL", 0, 0, 0, 0, 0, 0, 0, 0.85)
+        -- floor glows with the accent color where the character stands
+        local glow = (kind == "class") and 0.55 or 0.30
+        Grad(View.floor, "VERTICAL", ar + cr * glow * 0.6, ag + cg * glow * 0.6, ab + cb * glow * 0.6, 0.9, 0, 0, 0, 0)
+        -- vignette on both sides
+        Grad(View.edgeL, "HORIZONTAL", 0, 0, 0, 0.75, 0, 0, 0, 0)
+        Grad(View.edgeR, "HORIZONTAL", 0, 0, 0, 0, 0, 0, 0, 0.75)
+    end
 end
 
 function P.CycleBackground()

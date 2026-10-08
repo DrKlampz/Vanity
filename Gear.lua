@@ -79,7 +79,7 @@ function G.Info(slot)
         local gi = (C_Item and C_Item.GetItemInfo) or GetItemInfo
         if gi then local ok, _, _, q = pcall(gi, link) if ok then info.quality = q end end
     end
-    if G.ENCHANTABLE[slot] and EnchantID(link) == 0 then
+    if G.ENCHANTABLE[slot] and EnchantID(link) == 0 and (UnitLevel and UnitLevel("player") or 0) >= 40 then
         -- Off hand: only weapons and shields can be enchanted; held items can't
         local ok = true
         if slot == 17 then

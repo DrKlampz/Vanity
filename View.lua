@@ -208,6 +208,25 @@ local function Build()
     bg:SetAllPoints()
     bg:SetColorTexture(0.03, 0.03, 0.05, 1)
     View.bg = bg
+    -- Stage lighting layered over the base color: dark ceiling, colored floor glow, dark edges
+    local function Layer(sub)
+        local t = frame:CreateTexture(nil, "BACKGROUND", nil, sub)
+        t:SetColorTexture(1, 1, 1, 1)
+        return t
+    end
+    View.top = Layer(1)
+    View.top:SetPoint("TOPLEFT") View.top:SetPoint("TOPRIGHT")
+    View.top:SetHeight((tonumber(UIParent:GetHeight()) or 900) * 0.45)
+    View.floor = Layer(1)
+    View.floor:SetPoint("BOTTOMLEFT") View.floor:SetPoint("BOTTOMRIGHT")
+    View.floor:SetHeight((tonumber(UIParent:GetHeight()) or 900) * 0.55)
+    View.edgeL = Layer(2)
+    View.edgeL:SetPoint("TOPLEFT") View.edgeL:SetPoint("BOTTOMLEFT")
+    View.edgeL:SetWidth((tonumber(UIParent:GetWidth()) or 1600) * 0.28)
+    View.edgeR = Layer(2)
+    View.edgeR:SetPoint("TOPRIGHT") View.edgeR:SetPoint("BOTTOMRIGHT")
+    View.edgeR:SetWidth((tonumber(UIParent:GetWidth()) or 1600) * 0.28)
+    if V.Photo then V.Photo.ApplyBackground() end
 
     model = CreateFrame("PlayerModel", "VanityModel", frame)
     model:SetPoint("TOP", frame, "TOP", 0, -90)
