@@ -127,6 +127,8 @@ local function Build()
     y = y - 6
     Header("AFK screen")
     Place(Check(panel, "Show Vanity when I go AFK", "afkScreen"))
+    Place(Cycle(panel, "Game interface", { { "auto", "Hide in AFK/photo" }, { "never", "Leave it on" } },
+        function() return V.db.hideUI end, function(v) V.db.hideUI = v View.UpdateUI() end))
     Place(Check(panel, "Cycle poses while AFK", "afkPoses"))
     Place(Check(panel, "24-hour clock", "clock24"))
     local prev = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")

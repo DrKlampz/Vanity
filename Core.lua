@@ -14,6 +14,7 @@ V.DEFAULTS = {
     stageLight = true,       -- colored glow on the floor
     vignette = true,         -- darkened edges
     camera = "full",         -- full | waist | bust | face
+    hideUI = "auto",         -- auto = hide the game interface in AFK and photo mode, never = leave it
     afkScreen = true,        -- show the showcase while you are AFK
     afkPoses = true,         -- cycle poses (sit, wave, laugh ...) on the AFK screen
     clock24 = false,         -- 24-hour clock on the AFK screen
@@ -97,6 +98,9 @@ SlashCmdList.VANITY = function(input)
     elseif cmd == "settings" or cmd == "options" or cmd == "config" then
         if V.View then V.View.Build() V.View.GetFrame():Show() end
         if V.Settings then V.Settings.Toggle() end
+    elseif cmd == "ui" then
+        if UIParent and not UIParent:IsShown() then UIParent:Show() end
+        V.Print("Game interface restored.")
     elseif cmd == "reset" then
         if V.View then V.View.ResetCamera() end
     else

@@ -1,5 +1,10 @@
 # Vanity
 
+## v0.2.1
+- Item glows now wrap the whole slot (they were drawn at button size, so they looked tiny).
+- AFK mode and photo mode hide the game interface (like Alt+Z) so only your character and the Vanity overlay show. The interface comes back when you leave, close the window, enter combat, or type `/vanity ui`. Setting: Game interface > Hide in AFK/photo, or Leave it on.
+- The "The world" background now dims the interface behind the normal showcase instead of letting it clutter the view.
+
 ## v0.2.0
 - **14 backgrounds**, picked from swatches: Midnight, Class color, Faction, Ember, Frost, Forest, Void, Gilded, Sunset, Slate, Pure black, Studio white, Green screen, and The world.
 - **Settings panel** (`/vanity settings` or the Settings button): background, brightness, floor glow, darkened edges, camera framing (full body, waist up, bust, portrait), turntable and speed, stats panel, slot names, hints, character-window button.

@@ -60,7 +60,9 @@ function P.ApplyBackground()
     local layers = { View.top, View.floor, View.edgeL, View.edgeR }
     local function showLayers(on) for _, t in ipairs(layers) do if t then t:SetShown(on) end end end
     if theme.flat == false then
-        bg:SetColorTexture(0, 0, 0, 0) showLayers(false) return
+        -- the live world: dim the interface behind us, unless it is hidden entirely
+        local dim = (View.UIHidden and View.UIHidden()) and 0 or 0.6
+        bg:SetColorTexture(0, 0, 0, dim) showLayers(false) return
     elseif theme.flat then
         bg:SetColorTexture(theme.flat[1], theme.flat[2], theme.flat[3], 1) showLayers(false) return
     end
@@ -146,6 +148,7 @@ function P.Enter()
     View.photoLock = false
     View.SetPanels(false)
     bar:Show()
+    View.UpdateUI()
     P.ApplyBackground()
 end
 
@@ -155,6 +158,7 @@ function P.Leave()
     if bar then bar:Hide() end
     View.SetPanels(true)
     View.Refresh()
+    View.UpdateUI()
     local model = View.GetModel()
     if model then pcall(model.SetAnimation, model, 0) end
     poseIndex = 1

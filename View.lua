@@ -83,7 +83,8 @@ local function MakeSlot(slot, side)
     b.icon = b:CreateTexture(nil, "ARTWORK")
     b.icon:SetPoint("TOPLEFT", 3, -3) b.icon:SetPoint("BOTTOMRIGHT", -3, 3)
     b.border = b:CreateTexture(nil, "OVERLAY")
-    b.border:SetAllPoints()
+    b.border:SetPoint("CENTER")
+    b.border:SetSize(46 * 1.9, 46 * 1.9)   -- this glow texture is meant to be about twice the button
     b.border:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
     b.border:SetBlendMode("ADD")
     b.ilvl = Font(b, "GameFontNormalSmall", "")
@@ -323,6 +324,7 @@ local function Build()
     frame:SetScript("OnHide", function()
         dragging = nil
         if V.Photo then V.Photo.Leave() end
+        View.SetUIHidden(false)
         V.Fire("viewHidden")
     end)
 end
@@ -345,6 +347,44 @@ function View.SetPanels(shown)
 end
 
 function View.IsShown() return frame and frame:IsShown() end
+
+-- Hide the game's own interface (like Alt+Z) while keeping Vanity on screen. Vanity moves to
+-- the world frame for the duration so hiding the normal interface doesn't hide it too.
+local uiHidden = false
+function View.UIHidden() return uiHidden end
+function View.SetUIHidden(on)
+    if not frame then return end
+    if on and V.db.hideUI == "never" then on = false end
+    if on == uiHidden then return end
+    if InCombatLockdown and InCombatLockdown() then return end
+    if on then
+        if WorldFrame then
+            frame:SetParent(WorldFrame)
+            local ws = tonumber(WorldFrame:GetEffectiveScale()) or 1
+            local us = tonumber(UIParent:GetEffectiveScale()) or 1
+            frame:SetScale(us / ws)
+            frame:ClearAllPoints()
+            frame:SetAllPoints(WorldFrame)
+        end
+        pcall(UIParent.Hide, UIParent)
+    else
+        pcall(UIParent.Show, UIParent)
+        frame:SetParent(UIParent)
+        frame:SetScale(1)
+        frame:ClearAllPoints()
+        frame:SetAllPoints(UIParent)
+    end
+    uiHidden = on
+    if V.Photo then V.Photo.ApplyBackground() end
+end
+
+-- Show or hide the interface to suit what Vanity is doing right now
+function View.UpdateUI()
+    local want = frame and frame:IsShown() and ((V.AFK and V.AFK.IsActive()) or (V.Photo and V.Photo.IsActive()))
+    View.SetUIHidden(want and true or false)
+end
+V.On("PLAYER_LOGOUT", function() if uiHidden then pcall(UIParent.Show, UIParent) end end)
+V.On("PLAYER_REGEN_DISABLED", function() if uiHidden then pcall(UIParent.Show, UIParent) uiHidden = false if frame then frame:SetParent(UIParent) frame:SetScale(1) frame:SetAllPoints(UIParent) end end end)
 
 -- Re-apply the display options (stats panel, slot names, hint)
 function View.ApplyPrefs()

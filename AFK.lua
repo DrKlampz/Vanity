@@ -85,6 +85,7 @@ function A.Enter()
     overlay.sub:SetText(("Level %s %s %s"):format(tostring(UnitLevel("player")), tostring(UnitRace("player")), tostring(cls)))
     overlay.stat:SetText(("Item level %.1f"):format(ilvl))
     overlay:Show()
+    View.UpdateUI()
     f:EnableKeyboard(true)
     if f.SetPropagateKeyboardInput then pcall(f.SetPropagateKeyboardInput, f, true) end
     f:SetScript("OnKeyDown", function() A.Leave() end)
@@ -104,6 +105,7 @@ function A.Leave()
     View.SetPanels(true)
     View.Refresh()
     View.ApplyPrefs()
+    View.UpdateUI()
     if openedByUs and f:IsShown() then f:Hide() end
     openedByUs = false
 end
