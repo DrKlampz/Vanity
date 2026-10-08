@@ -142,7 +142,9 @@ local function MakeSlot(slot, side)
     b.card = Font(b, "GameFontHighlightSmall", "")
     b.card:SetWidth(215)
     b.card:SetSpacing(2)
-    b.card:SetWordWrap(false)
+    b.card:SetHeight(70)
+    b.card:SetJustifyV("MIDDLE")
+    b.card:SetMaxLines(5)
     if side == "right" or side == "bottom" then
         b.card:SetPoint("LEFT", b, "RIGHT", 10, 0) b.card:SetJustifyH("LEFT")
     else

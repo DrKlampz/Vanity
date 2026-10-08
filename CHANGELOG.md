@@ -1,5 +1,8 @@
 # Vanity
 
+## v0.3.9
+- Fix: item cards showed only their first line (the stat and enchant lines were cut off). Every line now shows, one per row.
+
 ## v0.3.8
 - Item cards now match the tooltip layout: armor and stat lines (+Strength, +Stamina ...) beside each item, colored by the item's rarity, with enchants, equip/use effects and problems underneath. Slot spacing widened to fit.
 
