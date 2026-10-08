@@ -57,8 +57,22 @@ end
 ------------------------------------------------------------------------
 -- Slot buttons
 ------------------------------------------------------------------------
+-- The game's own tooltip lives under UIParent, which is hidden on the AFK screen, so
+-- Vanity uses its own tooltip (a child of the Vanity window) whenever the interface is hidden.
+local ownTip
+function View.Tip()
+    if not (View.UIHidden and View.UIHidden()) then return GameTooltip end
+    if not ownTip then
+        ownTip = CreateFrame("GameTooltip", "VanityTooltip", frame, "GameTooltipTemplate")
+        ownTip:SetFrameStrata("TOOLTIP")
+    end
+    return ownTip
+end
+function View.HideTips() GameTooltip:Hide() if ownTip then ownTip:Hide() end end
+
 local function SlotTooltip(self)
     local info = self.info
+    local GameTooltip = View.Tip()
     GameTooltip:SetOwner(self, self.side == "right" and "ANCHOR_LEFT" or "ANCHOR_RIGHT")
     if info and info.link then
         local ok = pcall(GameTooltip.SetInventoryItem, GameTooltip, "player", self.slot)
@@ -126,7 +140,7 @@ local function MakeSlot(slot, side)
     if side == "bottom" then b.label:ClearAllPoints() b.label:SetPoint("TOP", b, "BOTTOM", 0, -2) end
     b:RegisterForClicks("LeftButtonUp")
     b:SetScript("OnEnter", SlotTooltip)
-    b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    b:SetScript("OnLeave", function() View.HideTips() end)
     b:SetScript("OnClick", function(self)
         if IsShiftKeyDown and IsShiftKeyDown() and self.info and self.info.link then
             if ChatEdit_InsertLink then ChatEdit_InsertLink(self.info.link) end
@@ -183,8 +197,16 @@ end
 ------------------------------------------------------------------------
 local function Money() return "" end
 
+-- Full display name: the game's PvP name (carries any surname/title) when it has one
+function View.DisplayName(unit)
+    local plain = UnitName and UnitName(unit) or ""
+    local full = UnitPVPName and UnitPVPName(unit)
+    if type(full) == "string" and full ~= "" then return full end
+    return plain
+end
+
 local function RefreshHeader()
-    local name = (looking == "target" and UnitName("target")) or UnitName("player") or ""
+    local name = View.DisplayName(looking == "target" and "target" or "player")
     header.name:SetText(name)
     local cls = select(2, UnitClass(looking == "target" and "target" or "player"))
     local r, g, b = 1, 1, 1
@@ -207,7 +229,7 @@ local function RefreshHeader()
         header.dur:SetText(avg and ("Durability %d%% (lowest %d%%)"):format(math.floor(avg * 100 + 0.5), math.floor(low * 100 + 0.5)) or "")
         local probs = G.Problems()
         if #probs == 0 then
-            header.problems:SetText("|cff66ff66Everything enchanted and gemmed|r")
+            header.problems:SetText("")
         else
             local parts = {}
             for _, p in ipairs(probs) do parts[#parts + 1] = (G.NAMES[p.slot] or "?") .. ": " .. table.concat(p.problems, ", ") end

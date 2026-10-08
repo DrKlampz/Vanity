@@ -1,5 +1,11 @@
 # Vanity
 
+## v0.3.6
+- AFK screen: item and buff tooltips now show (the game's tooltip was hidden with the interface; Vanity uses its own). Your active buffs appear bottom right with tooltips.
+- Removed the "Everything enchanted and gemmed" line (missing enchants/gems still list and flag on the slots) and the "Print Screen is safe" line.
+- Name at top left uses the game's full display name (including any surname/title).
+- Nicer look: drifting gold embers and a soft plate behind the timer.
+
 ## v0.3.1
 - New addon icon (gold V on a dark tile) for the AddOns list and the minimap button.
 - Release packaging for GitHub, Wago and CurseForge.

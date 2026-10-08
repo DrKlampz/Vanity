@@ -57,6 +57,48 @@ local function Build()
         return t
     end
     overlay.ruleL, overlay.ruleR = Rule("L"), Rule("R")
+
+    -- soft gold vignette frame and a dark plate behind the timer
+    overlay.plate = overlay:CreateTexture(nil, "BACKGROUND", nil, 6)
+    overlay.plate:SetPoint("TOPLEFT", overlay.title, "TOPLEFT", -230, 14)
+    overlay.plate:SetPoint("BOTTOMRIGHT", overlay.tip, "BOTTOMRIGHT", 230, -12)
+    overlay.plate:SetColorTexture(1, 1, 1, 1)
+    if V.Photo and V.Photo.Grad then V.Photo.Grad(overlay.plate, "VERTICAL", 0, 0, 0, 0.0, 0, 0, 0, 0.55) end
+    overlay.tip:SetTextColor(0.75, 0.75, 0.8)
+    -- drifting embers
+    overlay.motes = {}
+    for i = 1, 28 do
+        local t = overlay:CreateTexture(nil, "ARTWORK", nil, 3)
+        t:SetTexture("Interface\\Cooldown\\star4")
+        t:SetBlendMode("ADD")
+        local sz = 6 + (i * 7) % 16
+        t:SetSize(sz, sz)
+        t:SetVertexColor(1, 0.8 - (i % 5) * 0.06, 0.4, 0.8)
+        overlay.motes[i] = { tex = t, x = (i * 137) % 1000 / 1000, y = (i * 61) % 100 / 100, speed = 0.015 + (i % 7) * 0.006, sway = 0.01 + (i % 4) * 0.008, ph = i }
+    end
+    -- buffs along the bottom right, with tooltips
+    overlay.buffs = {}
+    for i = 1, 16 do
+        local b = CreateFrame("Button", nil, overlay)
+        b:SetSize(30, 30)
+        b:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -56 - ((i - 1) % 8) * 34, 64 + math.floor((i - 1) / 8) * 34)
+        b.icon = b:CreateTexture(nil, "ARTWORK")
+        b.icon:SetAllPoints()
+        b.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+        b.count = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        b.count:SetPoint("BOTTOMRIGHT", -1, 1)
+        b.idx = i
+        b:SetScript("OnEnter", function(self)
+            local tip = View.Tip()
+            tip:SetOwner(self, "ANCHOR_TOPLEFT")
+            local ok = pcall(tip.SetUnitAura, tip, "player", self.idx, "HELPFUL")
+            if not ok then pcall(tip.SetUnitBuff, tip, "player", self.idx) end
+            tip:Show()
+        end)
+        b:SetScript("OnLeave", function() View.HideTips() end)
+        b:Hide()
+        overlay.buffs[i] = b
+    end
     local acc = 0
     overlay:SetScript("OnUpdate", function(_, elapsed)
         elapsed = elapsed or 0
@@ -68,15 +110,56 @@ local function Build()
         end
         local pulse = 0.65 + 0.35 * math.sin(GetTime() * 1.6)
         overlay.title:SetAlpha(pulse)
+        local w, h = tonumber(overlay:GetWidth()), tonumber(overlay:GetHeight())
+        if w and h and w > 0 then
+            local t = GetTime()
+            for _, m in ipairs(overlay.motes) do
+                m.y = m.y + m.speed * (elapsed or 0)
+                if m.y > 1 then m.y = 0 end
+                local x = m.x + math.sin(t * 0.6 + m.ph) * m.sway
+                m.tex:ClearAllPoints()
+                m.tex:SetPoint("CENTER", overlay, "BOTTOMLEFT", x * w, m.y * h)
+                m.tex:SetAlpha(math.sin(m.y * math.pi) * (0.5 + 0.5 * math.sin(t * 1.3 + m.ph)))
+            end
+        end
         if acc < 0.25 then return end
         acc = 0
         A.Update()
     end)
 end
 
+local function Buffs()
+    local n = 0
+    for i = 1, 16 do
+        local icon, count
+        if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
+            local ok, d = pcall(C_UnitAuras.GetAuraDataByIndex, "player", i, "HELPFUL")
+            if ok and type(d) == "table" then
+                icon = d.icon
+                count = d.applications
+                if issecretvalue and (issecretvalue(icon) or issecretvalue(count)) then icon, count = nil, nil end
+            end
+        elseif UnitBuff then
+            local ok, _, ic, c = pcall(UnitBuff, "player", i)
+            if ok then icon, count = ic, c end
+        end
+        local b = overlay.buffs[i]
+        if icon then
+            n = i
+            b.icon:SetTexture(icon)
+            b.count:SetText((type(count) == "number" and count > 1) and count or "")
+            b:Show()
+        else
+            b:Hide()
+        end
+    end
+    return n
+end
+
 function A.Update()
     if not active or not overlay then return end
     local now = GetTime()
+    Buffs()
     overlay.timer:SetText(Format(now - startedAt))
     overlay.clock:SetText(date(V.db.clock24 and "%H:%M" or "%I:%M %p"))
     overlay.date:SetText(date("%A, %B %d"))
@@ -86,10 +169,9 @@ function A.Update()
             ("Item level %.1f"):format(V.Gear.AverageItemLevel()),
             avg and ("Durability %d%%"):format(math.floor(avg * 100 + 0.5)) or nil,
             (GetRealZoneText and GetRealZoneText() or "") ~= "" and GetRealZoneText() or nil,
-            "Move or press a key to come back  -  Print Screen is safe",
         }
         local list = {}
-        for i = 1, 4 do if tips[i] then list[#list + 1] = tips[i] end end
+        for i = 1, 3 do if tips[i] then list[#list + 1] = tips[i] end end
         tipIdx = tipIdx % #list + 1
         overlay.tip:SetText(list[tipIdx])
         nextTip = now + 6
