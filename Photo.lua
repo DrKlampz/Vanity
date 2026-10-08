@@ -42,7 +42,7 @@ local function ClassColor()
 end
 
 -- Gradient between two RGBA colors, whichever way this client wants the arguments
-local function Grad(tex, orient, r1, g1, b1, a1, r2, g2, b2, a2)
+function P.Grad(tex, orient, r1, g1, b1, a1, r2, g2, b2, a2)
     if not tex then return end
     local ok = false
     if CreateColor and tex.SetGradient then
@@ -53,11 +53,12 @@ local function Grad(tex, orient, r1, g1, b1, a1, r2, g2, b2, a2)
     end
 end
 
+local Grad = P.Grad
 function P.ApplyBackground()
     local bg = View.bg
     if not bg then return end
     local theme = BY_ID[V.db.background] or BY_ID.dark
-    local layers = { View.top, View.floor, View.edgeL, View.edgeR }
+    local layers = { View.top, View.floor, View.edgeL, View.edgeR, View.beamL, View.beamR }
     local function showLayers(on) for _, t in ipairs(layers) do if t then t:SetShown(on) end end end
     if theme.flat == false then
         -- the live world: dim the interface behind us, unless it is hidden entirely
@@ -80,15 +81,19 @@ function P.ApplyBackground()
     bg:SetColorTexture(c(base[1]), c(base[2]), c(base[3]), 1)
     showLayers(true)
     local stage = V.db.stageLight ~= false
-    Grad(View.top, "VERTICAL", 0, 0, 0, 0, 0, 0, 0, 0.85)
+    P.Grad(View.top, "VERTICAL", 0, 0, 0, 0, 0, 0, 0, 0.85)
     if stage then
-        Grad(View.floor, "VERTICAL", c(floor[1] * 0.75), c(floor[2] * 0.75), c(floor[3] * 0.75), 0.9, 0, 0, 0, 0)
+        P.Grad(View.floor, "VERTICAL", c(floor[1] * 0.75), c(floor[2] * 0.75), c(floor[3] * 0.75), 0.9, 0, 0, 0, 0)
     else
-        Grad(View.floor, "VERTICAL", 0, 0, 0, 0, 0, 0, 0, 0)
+        P.Grad(View.floor, "VERTICAL", 0, 0, 0, 0, 0, 0, 0, 0)
     end
+    -- spotlight: a soft column of the accent color behind the model
+    local bl = stage and 0.16 or 0
+    P.Grad(View.beamL, "HORIZONTAL", 0, 0, 0, 0, c(floor[1]), c(floor[2]), c(floor[3]), bl)
+    P.Grad(View.beamR, "HORIZONTAL", c(floor[1]), c(floor[2]), c(floor[3]), bl, 0, 0, 0, 0)
     local e = V.db.vignette ~= false and 0.75 or 0
-    Grad(View.edgeL, "HORIZONTAL", 0, 0, 0, e, 0, 0, 0, 0)
-    Grad(View.edgeR, "HORIZONTAL", 0, 0, 0, 0, 0, 0, 0, e)
+    P.Grad(View.edgeL, "HORIZONTAL", 0, 0, 0, e, 0, 0, 0, 0)
+    P.Grad(View.edgeR, "HORIZONTAL", 0, 0, 0, 0, 0, 0, 0, e)
 end
 
 function P.SetBackground(id)

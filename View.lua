@@ -74,15 +74,43 @@ local function SlotTooltip(self)
     GameTooltip:Show()
 end
 
+local SLOT_API = {
+    [1] = "HeadSlot", [2] = "NeckSlot", [3] = "ShoulderSlot", [4] = "ShirtSlot", [5] = "ChestSlot",
+    [6] = "WaistSlot", [7] = "LegsSlot", [8] = "FeetSlot", [9] = "WristSlot", [10] = "HandsSlot",
+    [11] = "Finger0Slot", [12] = "Finger1Slot", [13] = "Trinket0Slot", [14] = "Trinket1Slot",
+    [15] = "BackSlot", [16] = "MainHandSlot", [17] = "SecondaryHandSlot", [18] = "RangedSlot",
+    [19] = "TabardSlot",
+}
+local function EmptyTexture(slot)
+    if not GetInventorySlotInfo then return nil end
+    local ok, _, tex = pcall(GetInventorySlotInfo, SLOT_API[slot])
+    if ok and type(tex) == "string" then return tex end
+end
+
 local function MakeSlot(slot, side)
     local b = CreateFrame("Button", nil, frame)
     b:SetSize(46, 46)
     b.slot, b.side = slot, side
     b.bg = b:CreateTexture(nil, "BACKGROUND")
     b.bg:SetAllPoints()
-    b.bg:SetColorTexture(0.05, 0.05, 0.07, 0.8)
+    b.bg:SetColorTexture(0.03, 0.03, 0.05, 0.88)
+    -- thin frame around the slot, tinted with the item's quality
+    b.edge = {}
+    for i = 1, 4 do b.edge[i] = b:CreateTexture(nil, "BORDER") end
+    b.edge[1]:SetPoint("TOPLEFT") b.edge[1]:SetPoint("TOPRIGHT") b.edge[1]:SetHeight(1)
+    b.edge[2]:SetPoint("BOTTOMLEFT") b.edge[2]:SetPoint("BOTTOMRIGHT") b.edge[2]:SetHeight(1)
+    b.edge[3]:SetPoint("TOPLEFT") b.edge[3]:SetPoint("BOTTOMLEFT") b.edge[3]:SetWidth(1)
+    b.edge[4]:SetPoint("TOPRIGHT") b.edge[4]:SetPoint("BOTTOMRIGHT") b.edge[4]:SetWidth(1)
+    for i = 1, 4 do b.edge[i]:SetColorTexture(0.5, 0.42, 0.22, 0.9) end
     b.icon = b:CreateTexture(nil, "ARTWORK")
     b.icon:SetPoint("TOPLEFT", 3, -3) b.icon:SetPoint("BOTTOMRIGHT", -3, 3)
+    b.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+    b:SetHighlightTexture("Interface\\Buttons\\WHITE8X8", "ADD")
+    local hl = b:GetHighlightTexture()
+    if hl then hl:SetVertexColor(1, 1, 1, 0.18) end
+    b.pill = b:CreateTexture(nil, "ARTWORK", nil, 2)
+    b.pill:SetPoint("BOTTOMLEFT", 3, 3) b.pill:SetPoint("BOTTOMRIGHT", -3, 3) b.pill:SetHeight(13)
+    b.pill:SetColorTexture(0, 0, 0, 0.65)
     b.border = b:CreateTexture(nil, "OVERLAY")
     b.border:SetPoint("CENTER")
     b.border:SetSize(46 * 1.9, 46 * 1.9)   -- this glow texture is meant to be about twice the button
@@ -127,14 +155,21 @@ local function RefreshSlots()
         if info.link then
             b.icon:SetTexture(info.texture)
             b.icon:SetDesaturated(false)
+            b.icon:SetAlpha(1)
             local r, g, bl = G.QualityColor(info.quality)
             b.border:SetVertexColor(r, g, bl)
             b.border:Show()
+            for i = 1, 4 do b.edge[i]:SetColorTexture(r, g, bl, 1) end
+            b.pill:Show()
             b.ilvl:SetText(info.ilvl and tostring(info.ilvl) or "")
             b.ilvl:SetTextColor(r, g, bl)
             if #info.problems > 0 then b.warn:Show() else b.warn:Hide() end
         else
-            b.icon:SetTexture(nil)
+            b.icon:SetTexture(EmptyTexture(b.slot))
+            b.icon:SetDesaturated(true)
+            b.icon:SetAlpha(0.35)
+            for i = 1, 4 do b.edge[i]:SetColorTexture(0.35, 0.3, 0.18, 0.8) end
+            b.pill:Hide()
             b.border:Hide()
             b.ilvl:SetText("")
             b.warn:Hide()
@@ -156,6 +191,9 @@ local function RefreshHeader()
     local col = cls and RAID_CLASS_COLORS and RAID_CLASS_COLORS[cls]
     if col then r, g, b = col.r, col.g, col.b end
     header.name:SetTextColor(r, g, b)
+    if V.Photo and V.Photo.Grad and header.line then
+        V.Photo.Grad(header.line, "HORIZONTAL", r, g, b, 1, r, g, b, 0)
+    end
     local unit = looking == "target" and "target" or "player"
     local race = UnitRace and UnitRace(unit) or ""
     local class = UnitClass and UnitClass(unit) or ""
@@ -164,7 +202,7 @@ local function RefreshHeader()
     header.sub:SetText(("Level %s %s %s%s"):format(tostring(lvl), tostring(race), tostring(class), guild and ("   <" .. guild .. ">") or ""))
     if looking == "player" then
         header.ilvl:SetText(("%.1f"):format(G.AverageItemLevel()))
-        header.ilvlLabel:SetText("Item level")
+        header.ilvlLabel:SetText("I T E M   L E V E L")
         local avg, low = G.Durability()
         header.dur:SetText(avg and ("Durability %d%% (lowest %d%%)"):format(math.floor(avg * 100 + 0.5), math.floor(low * 100 + 0.5)) or "")
         local probs = G.Problems()
@@ -178,6 +216,12 @@ local function RefreshHeader()
     else
         header.ilvl:SetText("") header.ilvlLabel:SetText("") header.dur:SetText("") header.problems:SetText("")
     end
+end
+
+function View.ShowStats(on)
+    on = on and true or false
+    if stats then stats:SetShown(on) end
+    for _, t in ipairs({ View.statsCard, View.statsTop, View.statsTitle }) do if t then t:SetShown(on) end end
 end
 
 local function RefreshStats()
@@ -234,6 +278,22 @@ local function Build()
     View.edgeR = Layer(2)
     View.edgeR:SetPoint("TOPRIGHT") View.edgeR:SetPoint("BOTTOMRIGHT")
     View.edgeR:SetWidth((tonumber(UIParent:GetWidth()) or 1600) * 0.28)
+    -- spotlight beam behind the model
+    View.beamL = Layer(3)
+    View.beamL:SetPoint("TOP") View.beamL:SetPoint("BOTTOM") View.beamL:SetPoint("RIGHT", frame, "CENTER", 0, 0)
+    View.beamL:SetWidth(300)
+    View.beamR = Layer(3)
+    View.beamR:SetPoint("TOP") View.beamR:SetPoint("BOTTOM") View.beamR:SetPoint("LEFT", frame, "CENTER", 0, 0)
+    View.beamR:SetWidth(300)
+    -- cinematic bars, only on the AFK screen
+    View.letterTop = Layer(4)
+    View.letterTop:SetPoint("TOPLEFT") View.letterTop:SetPoint("TOPRIGHT")
+    View.letterTop:SetHeight((tonumber(UIParent:GetHeight()) or 900) * 0.055)
+    View.letterTop:SetColorTexture(0, 0, 0, 1) View.letterTop:Hide()
+    View.letterBottom = Layer(4)
+    View.letterBottom:SetPoint("BOTTOMLEFT") View.letterBottom:SetPoint("BOTTOMRIGHT")
+    View.letterBottom:SetHeight((tonumber(UIParent:GetHeight()) or 900) * 0.055)
+    View.letterBottom:SetColorTexture(0, 0, 0, 1) View.letterBottom:Hide()
     if V.Photo then V.Photo.ApplyBackground() end
 
     model = CreateFrame("PlayerModel", "VanityModel", frame)
@@ -271,10 +331,16 @@ local function Build()
     header = {}
     header.name = Font(frame, "GameFontNormalHuge", "")
     header.name:SetPoint("TOPLEFT", 40, -30)
+    pcall(header.name.SetFont, header.name, "Fonts\\MORPHEUS.TTF", 34, "OUTLINE")
+    header.line = frame:CreateTexture(nil, "ARTWORK")
+    header.line:SetPoint("TOPLEFT", header.name, "BOTTOMLEFT", 0, -34)
+    header.line:SetSize(300, 2)
+    header.line:SetColorTexture(1, 1, 1, 1)
     header.sub = Font(frame, "GameFontHighlight", "")
     header.sub:SetPoint("TOPLEFT", header.name, "BOTTOMLEFT", 0, -4)
     header.ilvl = Font(frame, "GameFontNormalHuge", "")
-    header.ilvl:SetPoint("TOP", frame, "TOP", 0, -28)
+    header.ilvl:SetPoint("TOP", frame, "TOP", 0, -26)
+    pcall(header.ilvl.SetFont, header.ilvl, "Fonts\\MORPHEUS.TTF", 34, "OUTLINE")
     header.ilvl:SetTextColor(GOLD[1], GOLD[2], GOLD[3])
     header.ilvlLabel = Font(frame, "GameFontDisableSmall", "")
     header.ilvlLabel:SetPoint("TOP", header.ilvl, "BOTTOM", 0, -2)
@@ -285,9 +351,20 @@ local function Build()
     header.problems:SetJustifyH("LEFT")
 
     stats = Font(frame, "GameFontHighlight", "")
-    stats:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -40, -140)
+    stats:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -56, -176)
     stats:SetJustifyH("RIGHT")
     stats:SetSpacing(4)
+    View.statsCard = frame:CreateTexture(nil, "BACKGROUND", nil, 5)
+    View.statsCard:SetPoint("TOPLEFT", stats, "TOPLEFT", -18, 40)
+    View.statsCard:SetPoint("BOTTOMRIGHT", stats, "BOTTOMRIGHT", 16, -14)
+    View.statsCard:SetColorTexture(0, 0, 0, 0.42)
+    View.statsTop = frame:CreateTexture(nil, "BORDER")
+    View.statsTop:SetPoint("TOPLEFT", View.statsCard, "TOPLEFT") View.statsTop:SetPoint("TOPRIGHT", View.statsCard, "TOPRIGHT")
+    View.statsTop:SetHeight(2)
+    View.statsTop:SetColorTexture(GOLD[1], GOLD[2], GOLD[3], 0.9)
+    View.statsTitle = Font(frame, "GameFontNormal", "A T T R I B U T E S")
+    View.statsTitle:SetPoint("BOTTOM", stats, "TOP", -8, 14)
+    View.statsTitle:SetTextColor(GOLD[1], GOLD[2], GOLD[3])
 
     hint = Font(frame, "GameFontDisableSmall", "Drag to rotate - Right-drag to move - Wheel to zoom")
     hint:SetPoint("BOTTOM", frame, "BOTTOM", 0, 14)
@@ -342,7 +419,7 @@ function View.SetPanels(shown)
     if not frame then return end
     for _, b in pairs(slots) do b:SetShown(shown and looking == "player") end
     for _, k in ipairs({ "name", "sub", "ilvl", "ilvlLabel", "dur", "problems" }) do header[k]:SetShown(shown) end
-    stats:SetShown(shown and V.db.showStats)
+    View.ShowStats(shown and V.db.showStats)
     for _, b in pairs(slots) do b.label:SetShown(shown and V.db.showLabels) end
     hint:SetShown(shown and V.db.showHint)
     for _, b in pairs(View.buttons or {}) do b:SetShown(shown) end
@@ -355,6 +432,7 @@ function View.AFKLayout(on)
     if not frame then return end
     for _, b in pairs(View.buttons or {}) do b:SetShown(not on) end
     hint:SetShown(not on and V.db.showHint)
+    if View.letterTop then View.letterTop:SetShown(on and true or false) View.letterBottom:SetShown(on and true or false) end
 end
 
 -- Hide the game's own interface (like Alt+Z) while keeping Vanity on screen. Vanity moves to
@@ -430,7 +508,7 @@ function View.ApplyPrefs()
     if not frame then return end
     local panels = not (V.Photo and V.Photo.IsActive())
     local afk = V.AFK and V.AFK.IsActive()
-    stats:SetShown(panels and V.db.showStats)
+    View.ShowStats(panels and V.db.showStats)
     hint:SetShown(panels and not afk and V.db.showHint)
     for _, b in pairs(slots) do b.label:SetShown(panels and V.db.showLabels) end
 end

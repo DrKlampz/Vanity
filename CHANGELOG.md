@@ -1,5 +1,9 @@
 # Vanity
 
+## v0.3.0
+- Polish pass: framed slots with quality-colored edges and the game's empty-slot icons, an item level badge on each item, hover highlight, a fancy name and item level font, a class-colored accent line under the header, an Attributes card for the stats, and a soft spotlight beam behind the model.
+- AFK screen: cinematic black bars, a fade-in, a pulsing A F K title between gold rules, a big timer, clock and date, and an info line that rotates item level, durability and zone.
+
 ## v0.2.2
 - The AFK screen keeps your showcase: equipped items with item levels, stats, item level and durability stay on screen alongside the timer and clock. Only the buttons and the game's own interface are hidden.
 - Print Screen and modifier keys no longer end the AFK screen, so you can screenshot it.

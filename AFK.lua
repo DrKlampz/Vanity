@@ -14,6 +14,8 @@ local POSES = { 72, 67, 70, 69, 68, 66, 75, 80 }   -- sit, wave, laugh, dance, c
 local active, startedAt = false, 0
 local overlay, nextPose, poseIdx, standing = nil, 0, 0, true
 local openedByUs = false
+local fade = 1
+local tipIdx, nextTip = 0, 0
 
 local function Format(sec)
     sec = math.floor(sec)
@@ -28,20 +30,44 @@ local function Build()
     overlay = CreateFrame("Frame", "VanityAFK", f)
     overlay:SetAllPoints(f)
     overlay:Hide()
-    local function Text(template, point, x, y)
+    local function Text(template, point, x, y, size)
         local fs = overlay:CreateFontString(nil, "OVERLAY", template)
         fs:SetPoint(point, f, point, x, y)
+        if size then pcall(fs.SetFont, fs, "Fonts\\MORPHEUS.TTF", size, "OUTLINE") end
         return fs
     end
-    overlay.title = Text("GameFontNormalHuge", "BOTTOM", 0, 230)
-    overlay.title:SetText("|cffff5555AFK|r")
-    overlay.timer = Text("GameFontNormalHuge", "BOTTOM", 0, 190)
-    overlay.clock = Text("GameFontHighlightLarge", "TOPRIGHT", -50, -40)
-    overlay.tip = Text("GameFontDisableSmall", "BOTTOM", 0, 118)
-    overlay.tip:SetText("Move or press a key to come back (Print Screen is safe)")
+    overlay.title = Text("GameFontNormalHuge", "BOTTOM", 0, 262, 40)
+    overlay.title:SetText("A  F  K")
+    overlay.title:SetTextColor(1, 0.35, 0.3)
+    overlay.timer = Text("GameFontNormalHuge", "BOTTOM", 0, 208, 48)
+    overlay.timer:SetTextColor(0.95, 0.8, 0.4)
+    overlay.clock = Text("GameFontHighlightLarge", "TOPRIGHT", -56, -52, 26)
+    overlay.date = Text("GameFontDisableSmall", "TOPRIGHT", -56, -84)
+    overlay.tip = Text("GameFontHighlight", "BOTTOM", 0, 150)
+    -- gold rules either side of the title
+    local function Rule(side)
+        local t = overlay:CreateTexture(nil, "ARTWORK")
+        t:SetSize(170, 2)
+        if side == "L" then t:SetPoint("RIGHT", overlay.title, "LEFT", -18, 0) else t:SetPoint("LEFT", overlay.title, "RIGHT", 18, 0) end
+        t:SetColorTexture(1, 1, 1, 1)
+        if V.Photo and V.Photo.Grad then
+            if side == "L" then V.Photo.Grad(t, "HORIZONTAL", 0.9, 0.7, 0.3, 0, 0.9, 0.7, 0.3, 1)
+            else V.Photo.Grad(t, "HORIZONTAL", 0.9, 0.7, 0.3, 1, 0.9, 0.7, 0.3, 0) end
+        end
+        return t
+    end
+    overlay.ruleL, overlay.ruleR = Rule("L"), Rule("R")
     local acc = 0
     overlay:SetScript("OnUpdate", function(_, elapsed)
-        acc = acc + (elapsed or 0)
+        elapsed = elapsed or 0
+        acc = acc + elapsed
+        -- fade the whole screen in, and let the AFK title breathe
+        if fade < 1 then
+            fade = math.min(1, fade + elapsed / 1.2)
+            View.GetFrame():SetAlpha(fade)
+        end
+        local pulse = 0.65 + 0.35 * math.sin(GetTime() * 1.6)
+        overlay.title:SetAlpha(pulse)
         if acc < 0.25 then return end
         acc = 0
         A.Update()
@@ -53,6 +79,21 @@ function A.Update()
     local now = GetTime()
     overlay.timer:SetText(Format(now - startedAt))
     overlay.clock:SetText(date(V.db.clock24 and "%H:%M" or "%I:%M %p"))
+    overlay.date:SetText(date("%A, %B %d"))
+    if now >= nextTip then
+        local avg, low = V.Gear.Durability()
+        local tips = {
+            ("Item level %.1f"):format(V.Gear.AverageItemLevel()),
+            avg and ("Durability %d%%"):format(math.floor(avg * 100 + 0.5)) or nil,
+            (GetRealZoneText and GetRealZoneText() or "") ~= "" and GetRealZoneText() or nil,
+            "Move or press a key to come back  -  Print Screen is safe",
+        }
+        local list = {}
+        for i = 1, 4 do if tips[i] then list[#list + 1] = tips[i] end end
+        tipIdx = tipIdx % #list + 1
+        overlay.tip:SetText(list[tipIdx])
+        nextTip = now + 6
+    end
     if V.db.afkPoses and now >= nextPose then
         local model = View.GetModel()
         standing = not standing
@@ -76,6 +117,8 @@ function A.Enter()
     if V.Photo and V.Photo.IsActive() then V.Photo.Leave() end
     active = true
     startedAt = GetTime()
+    fade, tipIdx, nextTip = 0, 0, 0
+    f:SetAlpha(0)
     nextPose, poseIdx, standing = GetTime() + 4, 0, true
     if openedByUs then f:Show() end
     View.SetPanels(true)       -- gear, stats and item level stay up; only the buttons go
@@ -96,6 +139,8 @@ function A.Leave()
     View.forceSpin = false
     if overlay then overlay:Hide() end
     local f = View.GetFrame()
+    fade = 1
+    f:SetAlpha(1)
     f:EnableKeyboard(false)
     f:SetScript("OnKeyDown", nil)
     local model = View.GetModel()
@@ -124,4 +169,4 @@ V.On("PLAYER_FLAGS_CHANGED", function(_, unit)
 end)
 
 V.On("PLAYER_REGEN_DISABLED", function() if active then A.Leave() end end)
-V.AddHook("viewHidden", function() if active then active = false View.forceSpin = false if overlay then overlay:Hide() end openedByUs = false end end)
+V.AddHook("viewHidden", function() fade = 1 if View.GetFrame() then View.GetFrame():SetAlpha(1) end if active then active = false View.forceSpin = false if overlay then overlay:Hide() end openedByUs = false end end)
