@@ -19,7 +19,7 @@ V.DEFAULTS = {
     afkScreen = true,        -- show the showcase while you are AFK
     afkPoses = true,         -- cycle poses (sit, wave, laugh ...) on the AFK screen
     clock24 = false,         -- 24-hour clock on the AFK screen
-    charButton = true,       -- a Vanity button on the character window
+    charButton = false,      -- a Vanity button on the character window (off by default; shift-drag to move)
     minimap = { show = true, angle = 200 },
 }
 

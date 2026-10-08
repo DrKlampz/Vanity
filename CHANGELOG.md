@@ -1,5 +1,8 @@
 # Vanity
 
+## v0.3.10
+- The Vanity button on the character window is now off by default (existing installs are switched off once). Turn it back on in Settings; when on, shift-drag it to move it anywhere and the spot is remembered. Vanity is still on the minimap button, the addon list, and /vanity.
+
 ## v0.3.9
 - Fix: item cards showed only their first line (the stat and enchant lines were cut off). Every line now shows, one per row.
 

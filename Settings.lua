@@ -122,7 +122,7 @@ local function Build()
     Place(Check(panel, "Slot names (when cards are off)", "showLabels", View.ApplyPrefs))
     Place(Check(panel, "Controls hint", "showHint", View.ApplyPrefs))
     Place(Check(panel, "Button on the character window", "charButton", function()
-        if View.charBtn then View.charBtn:SetShown(V.db.charButton) end
+        if V.db.charButton then View.MakeCharButton() elseif View.charBtn then View.charBtn:Hide() end
     end))
 
     y = y - 6

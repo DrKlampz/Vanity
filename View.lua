@@ -615,14 +615,38 @@ end
 -- Entry points: character window button, minimap button
 ------------------------------------------------------------------------
 local function CharButton()
-    if not (V.db.charButton and CharacterFrame) or View.charBtn then return end
+    if not (V.db.charButton and CharacterFrame) then return end
+    if View.charBtn then View.charBtn:SetShown(true) return end
     local b = CreateFrame("Button", "VanityCharButton", CharacterFrame, "UIPanelButtonTemplate")
     b:SetSize(64, 20)
     b:SetText("Vanity")
-    b:SetPoint("TOPRIGHT", CharacterFrame, "TOPRIGHT", -50, -30)
+    local pos = V.db.charButtonPos
+    if type(pos) == "table" and pos.x then
+        b:SetPoint("CENTER", CharacterFrame, "BOTTOMLEFT", pos.x, pos.y)
+    else
+        b:SetPoint("TOPRIGHT", CharacterFrame, "TOPRIGHT", -50, -30)
+    end
+    -- shift-drag moves it, and the spot is remembered
+    b:SetMovable(true)
+    b:RegisterForDrag("LeftButton")
+    b:SetScript("OnDragStart", function(self) if IsShiftKeyDown and IsShiftKeyDown() then self:StartMoving() end end)
+    b:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        local cx, cy = self:GetCenter()
+        local fx, fy = CharacterFrame:GetLeft(), CharacterFrame:GetBottom()
+        if cx and fx then V.db.charButtonPos = { x = cx - fx, y = cy - fy } end
+    end)
+    b:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:AddLine("Vanity")
+        GameTooltip:AddLine("Shift-drag to move. Turn off in /vanity settings.", 0.8, 0.8, 0.8)
+        GameTooltip:Show()
+    end)
+    b:SetScript("OnLeave", function() GameTooltip:Hide() end)
     b:SetScript("OnClick", function() View.Toggle() end)
     View.charBtn = b
 end
+View.MakeCharButton = CharButton
 
 local mm
 local function Place_(angle)
@@ -679,4 +703,8 @@ function View.UpdateMinimap()
     if V.db.minimap.show then MakeMinimap() if mm then mm:Show() end elseif mm then mm:Hide() end
 end
 
-V.AddHook("loaded", function() CharButton() MakeMinimap() end)
+V.AddHook("loaded", function()
+    -- the character-window button is now off unless you turn it on (one-time switch)
+    if not V.db.charButtonReset then V.db.charButtonReset = true V.db.charButton = false end
+    CharButton() MakeMinimap()
+end)
