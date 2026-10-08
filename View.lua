@@ -165,15 +165,12 @@ local scan
 local function CardLines(slot, info)
     local out = {}
     local qr, qg, qb = G.QualityColor(info.quality)
-    local name = GetItemInfo and select(1, GetItemInfo(info.link)) or nil
-    if not name then name = info.link:match("%[(.-)%]") end
-    out[1] = ("|cff%02x%02x%02x%s|r"):format(math.floor(qr * 255), math.floor(qg * 255), math.floor(qb * 255), name or "?")
-    out[2] = ("|cffd9a441%s|r|cff999999%s|r"):format(info.ilvl and ("ilvl " .. info.ilvl) or "", G.NAMES[slot] and ("  -  " .. G.NAMES[slot]) or "")
     if not scan then
         scan = CreateFrame("GameTooltip", "VanityScanTip", UIParent, "GameTooltipTemplate")
     end
-    local stats, ench = {}, nil
-    local ok = pcall(function()
+    local armor, stats, mods = nil, {}, {}
+    local rgb = ("|cff%02x%02x%02x"):format(math.floor(qr * 255), math.floor(qg * 255), math.floor(qb * 255))
+    pcall(function()
         scan:SetOwner(UIParent, "ANCHOR_NONE")
         scan:ClearLines()
         scan:SetInventoryItem("player", slot)
@@ -182,16 +179,22 @@ local function CardLines(slot, info)
             local t = fs and fs:GetText()
             if type(t) == "string" and not (issecretvalue and issecretvalue(t)) then
                 local e = t:match("^Enchanted: (.+)")
-                if e then ench = e
-                elseif #stats < 3 and t:match("^%+%d[%d,]* %a") then stats[#stats + 1] = t end
+                if e then mods[#mods + 1] = "|cff55ff55" .. (#e > 36 and e:sub(1, 35) .. "..." or e) .. "|r"
+                elseif t:match("^%d[%d,]* Armor$") or t:match("^%d[%d,]* Block$") then armor = t
+                elseif t:match("^%+?%-?%d[%d,]* %a") and not t:match("Damage") then stats[#stats + 1] = t
+                elseif t:match("^%d+ %- %d+ .*Damage") or t:match("^Speed ") then stats[#stats + 1] = t
+                elseif t:match("^Equip: ") or t:match("^Use: ") or t:match("^Chance on hit") then
+                    mods[#mods + 1] = "|cff55ff55" .. (#t > 38 and t:sub(1, 37) .. "..." or t) .. "|r"
+                end
             end
         end
     end)
-    if #stats > 0 then out[#out + 1] = "|cffffffff" .. table.concat(stats, ", ") .. "|r" end
-    if ench then out[#out + 1] = "|cff55ff55" .. (#ench > 34 and ench:sub(1, 33) .. "..." or ench) .. "|r" end
-    local probs = {}
-    for _, p in ipairs(info.problems or {}) do probs[#probs + 1] = p end
-    if #probs > 0 then out[#out + 1] = "|cffff5555" .. table.concat(probs, ", ") .. "|r" end
+    out = {}
+    -- armor and stat values take the item's rarity color
+    if armor then out[#out + 1] = rgb .. armor .. "|r" end
+    for _, t in ipairs(stats) do if #out < 4 then out[#out + 1] = rgb .. t .. "|r" end end
+    for _, t in ipairs(mods) do if #out < 5 then out[#out + 1] = t end end
+    for _, p in ipairs(info.problems or {}) do if #out < 5 then out[#out + 1] = "|cffff5555" .. p .. "|r" end end
     return table.concat(out, "\n")
 end
 
@@ -202,7 +205,7 @@ local function Place(list, side, anchorX)
         if side == "bottom" then
             b:SetPoint("BOTTOM", frame, "BOTTOM", (i - (#list + 1) / 2) * 250 - 100, 40)
         else
-            b:SetPoint("TOP", frame, "TOP", anchorX, -140 - (i - 1) * 58)
+            b:SetPoint("TOP", frame, "TOP", anchorX, -140 - (i - 1) * 72)
         end
     end
 end

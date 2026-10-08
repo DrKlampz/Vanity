@@ -1,5 +1,8 @@
 # Vanity
 
+## v0.3.8
+- Item cards now match the tooltip layout: armor and stat lines (+Strength, +Stamina ...) beside each item, colored by the item's rarity, with enchants, equip/use effects and problems underneath. Slot spacing widened to fit.
+
 ## v0.3.7
 - Item cards: every equipped item now shows its details permanently beside its slot - name in quality color, item level, main stats, enchant and any problems - no hovering needed. Works in the showcase and on the AFK screen. Turn off under Settings ("Item cards"). With cards on, the Attributes panel moves to the bottom left.
 
