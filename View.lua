@@ -8,6 +8,7 @@ local GOLD = { 0.85, 0.65, 0.25 }
 local frame, model, bg, header, stats, hint
 local slots = {}
 local looking = "player"       -- "player" or "target"
+local panelsOn = true          -- false in photo mode, so refreshes do not bring the slots back
 local facing, zoom, panX, panY = 0, 1, 0, 0
 local dragging
 
@@ -138,7 +139,7 @@ local function RefreshSlots()
             b.ilvl:SetText("")
             b.warn:Hide()
         end
-        b:SetShown(looking == "player")
+        b:SetShown(panelsOn and looking == "player")
     end
 end
 
@@ -337,6 +338,7 @@ end
 
 -- Photo mode hides the panels and leaves only the model
 function View.SetPanels(shown)
+    panelsOn = shown and true or false
     if not frame then return end
     for _, b in pairs(slots) do b:SetShown(shown and looking == "player") end
     for _, k in ipairs({ "name", "sub", "ilvl", "ilvlLabel", "dur", "problems" }) do header[k]:SetShown(shown) end

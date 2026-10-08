@@ -2,6 +2,7 @@
 
 ## v0.2.2
 - The AFK screen keeps your showcase: equipped items with item levels, stats, item level and durability stay on screen alongside the timer and clock. Only the buttons and the game's own interface are hidden.
+- Fixed: a gear change while in photo mode brought the slots back.
 
 ## v0.2.1
 - Item glows now wrap the whole slot (they were drawn at button size, so they looked tiny).
