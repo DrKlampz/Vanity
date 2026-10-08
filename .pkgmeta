@@ -2,3 +2,6 @@ package-as: Vanity
 
 ignore:
   - README.md
+  - CURSEFORGE.md
+  - media/logo-400.png
+  - files.zip

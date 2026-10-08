@@ -1,5 +1,9 @@
 # Vanity
 
+## v0.3.1
+- New addon icon (gold V on a dark tile) for the AddOns list and the minimap button.
+- Release packaging for GitHub, Wago and CurseForge.
+
 ## v0.3.0
 - Polish pass: framed slots with quality-colored edges and the game's empty-slot icons, an item level badge on each item, hover highlight, a fancy name and item level font, a class-colored accent line under the header, an Attributes card for the stats, and a soft spotlight beam behind the model.
 - AFK screen: cinematic black bars, a fade-in, a pulsing A F K title between gold rules, a big timer, clock and date, and an info line that rotates item level, durability and zone.
