@@ -1,6 +1,6 @@
 ## Interface: 16001
 ## Title: |cffd9a441Vanity|r
-## Notes: A character showcase for WoW: Forever. Full-screen rotatable model, gear with item levels and missing enchant/gem warnings, stats, and a photo studio. Slash command: /vanity
+## Notes: A character showcase for WoW Forever: full-screen rotatable model, gear with item levels and cards, missing enchant and gem warnings, stats, a photo studio and an AFK screen. Slash command: /vanity
 ## Author: David
 ## Version: @project-version@
 ## Category: Miscellaneous

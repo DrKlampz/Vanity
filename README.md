@@ -2,34 +2,32 @@
 
 A character showcase for **WoW: Forever**. Your character on a full-screen stage, your gear around them, and a photo studio.
 
-Open it with `/vanity`, the **Vanity** button on the character window, the minimap button, or a key (Options > Key Bindings > AddOns > Vanity).
+Open it with `/vanity`, the minimap button, the addon list, or a key (Options > Key Bindings > AddOns > Vanity). A button on the character window is available in Settings.
 
-## What it does now (v0.1)
+## What it does
 - **Full-screen rotatable model.** Drag to turn, right-drag to move, mouse wheel to zoom, slow turntable (`/vanity spin`).
-- **Gear around the model** with item level on every item, quality-colored borders, hover tooltips, shift-click to link in chat.
-- **Warnings that matter.** A red ! on any item that is missing an enchant or has an empty gem socket, with a summary list on screen.
+- **Item cards.** Every equipped item shows its details beside its slot, no hovering needed: name in quality color, item level, main stats, enchant, equip/use effects and any problems. Hover for the full tooltip, shift-click to link in chat.
+- **Warnings that matter.** A red ! on any item that is missing an enchant (from level 40) or has an empty gem socket, with a summary list on screen.
 - **Average item level and durability** (average and lowest).
 - **Stats panel:** attributes, armor, attack power, crit, dodge, parry, block, haste, health, power.
-- **Photo mode** (`/vanity photo`): hides every panel, then a studio bar with backgrounds (dark, class color, light, green screen, or the live world), poses (wave, dance, cheer, bow, sit ...), turntable, and a screenshot button that hides the controls first.
+- **Photo mode** (`/vanity photo`): hides the interface, then a studio bar with backgrounds, poses (wave, dance, cheer, bow, sit ...), turntable, and a screenshot button that hides the controls first.
+- **14 backgrounds:** Midnight, Class color, Faction, Ember, Frost, Forest, Void, Gilded, Sunset, Slate, Pure black, Studio white, Green screen and The world.
+- **AFK screen.** Go AFK (or `/vanity afk` to preview) and Vanity fills the screen with your character, a big timer, a clock and your gear and stats, cycling poses. Your active buffs show with tooltips. Move or press a key to return.
 - **View target:** look at another player's model.
 
-## AFK screen
-Go AFK (or `/vanity afk` to preview) and Vanity fills the screen with your character, an AFK timer and a clock, and cycles poses. Move or press any key to return.
-
 ## Settings
-`/vanity settings`: 14 backgrounds, brightness, camera framing, turntable, panels, AFK options.
-
-## Planned
-Vanity is built from scratch (it shares no code or art with any other addon). Coming in later versions: a title and achievement showcase, saved looks/outfits, creature viewer, per-character profiles, themes.
+`/vanity settings`: background, brightness, camera framing (full body, waist up, bust, portrait), turntable, panels, item cards, game-interface hiding and AFK options.
 
 ## Commands
 | | |
 |---|---|
 | `/vanity` | Open or close the showcase |
 | `/vanity photo` | Photo mode |
+| `/vanity afk` | Preview the AFK screen |
 | `/vanity bg` | Cycle the background |
 | `/vanity spin` | Turntable on/off |
+| `/vanity settings` | Settings |
 | `/vanity reset` | Reset the camera |
 | `/vanity minimap` | Show or hide the minimap button |
 
-MIT licensed.
+Vanity is built from scratch (it shares no code or art with any other addon). MIT licensed.
