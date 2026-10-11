@@ -1,7 +1,7 @@
 # Vanity
 
 ## Unreleased
-- New: window customization. Alt-click the minimap button to restyle each window separately (or all together): background textures, colors with copy/paste, opacity sliders, border styles, fonts, scale and position lock. Off until you tick "Use a custom look"; unticking restores the original.
+- New: window customization. Alt-click the minimap button to restyle each window separately (or all together): background textures, colors with copy/paste, opacity sliders, border styles, fonts, scale and position lock. Over 50 fonts to pick from (install the LookFonts folder for the bundled ones; SharedMedia fonts show up too). Off until you tick "Use a custom look"; unticking restores the original.
 
 ## v0.3.10
 - The Vanity button on the character window is now off by default (existing installs are switched off once). Turn it back on in Settings; when on, shift-drag it to move it anywhere and the spot is remembered. Vanity is still on the minimap button, the addon list, and /vanity.
