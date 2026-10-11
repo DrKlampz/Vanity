@@ -11,6 +11,8 @@
 ## X-Wago-ID: kNMPB3Gz
 
 Core.lua
+Look.lua
+LookSetup.lua
 Gear.lua
 View.lua
 Photo.lua

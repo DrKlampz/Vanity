@@ -57,6 +57,7 @@ local function Build()
     View.Build()
     panel = CreateFrame("Frame", "VanitySettings", View.GetFrame())
     panel:SetSize(310, 640)
+    if V.WinLook then V.WinLook.Attach("settings", panel) end
     panel:SetPoint("TOPLEFT", View.GetFrame(), "TOPLEFT", 40, -100)
     panel:SetFrameLevel((tonumber(View.GetFrame():GetFrameLevel()) or 1) + 20)
     local bg = panel:CreateTexture(nil, "BACKGROUND")
