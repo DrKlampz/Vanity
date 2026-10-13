@@ -211,7 +211,18 @@ function A.Enter()
     View.UpdateUI()
     f:EnableKeyboard(true)
     if f.SetPropagateKeyboardInput then pcall(f.SetPropagateKeyboardInput, f, true) end
-    f:SetScript("OnKeyDown", function(_, key) if key and IGNORED_KEYS[key] then return end A.Leave() end)
+    f:SetScript("OnKeyDown", function(self, key)
+        if key == "ESCAPE" then
+            -- Escape only leaves AFK; don't let it also open the game menu
+            if self.SetPropagateKeyboardInput and not InCombatLockdown() then self:SetPropagateKeyboardInput(false) end
+            A.Leave()
+            if UnitIsAFK and UnitIsAFK("player") and SendChatMessage then SendChatMessage("", "AFK") end
+            return
+        end
+        if self.SetPropagateKeyboardInput and not InCombatLockdown() then self:SetPropagateKeyboardInput(true) end
+        if key and IGNORED_KEYS[key] then return end
+        A.Leave()
+    end)
     A.Update()
 end
 
