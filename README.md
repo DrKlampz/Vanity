@@ -10,7 +10,8 @@ Open it with `/vanity`, the minimap button, the addon list, or a key (Options > 
 - **Warnings that matter.** A red ! on any item that is missing an enchant (from level 40) or has an empty gem socket, with a summary list on screen.
 - **Average item level and durability** (average and lowest).
 - **Stats panel:** attributes, armor, attack power, crit, dodge, parry, block, haste, health, power.
-- **Photo mode** (`/vanity photo`): hides the interface, then a studio bar with backgrounds, poses (wave, dance, cheer, bow, sit ...), turntable, and a screenshot button that hides the controls first.
+- **Pose picker.** The Pose button opens a menu of 22 poses and emotes (salute, wave, bow, cheer, applaud, laugh, cry, flex, point, dance, sit, sleep, kneel ...). One-shot emotes repeat until you pick another.
+- **Photo mode** (`/vanity photo`): hides the interface, then a studio bar with backgrounds, the same pose picker, turntable, and a screenshot button that hides the controls first.
 - **14 backgrounds:** Midnight, Class color, Faction, Ember, Frost, Forest, Void, Gilded, Sunset, Slate, Pure black, Studio white, Green screen and The world.
 - **AFK screen.** Go AFK (or `/vanity afk` to preview) and Vanity fills the screen with your character, a big timer, a clock and your gear and stats, cycling poses. Your active buffs show with tooltips. Move or press a key to return.
 - **View target:** look at another player's model.

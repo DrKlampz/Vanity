@@ -485,7 +485,9 @@ local function Build()
     reset:SetPoint("RIGHT", who, "LEFT", -6, 0)
     local set = Button(frame, "Settings", 90, function() if V.Settings then V.Settings.Toggle() end end)
     set:SetPoint("RIGHT", reset, "LEFT", -6, 0)
-    View.buttons = { close = close, photo = photo, who = who, reset = reset, settings = set }
+    local pose = Button(frame, "Pose", 80, function(self) if V.Photo then V.Photo.TogglePoseMenu(self) end end)
+    pose:SetPoint("RIGHT", set, "LEFT", -6, 0)
+    View.buttons = { close = close, photo = photo, who = who, reset = reset, settings = set, pose = pose }
 
     frame:SetScript("OnShow", function() SetModelUnit() View.Refresh() View.ApplyPrefs() if V.Photo then V.Photo.SetCamera(V.db.camera or "full") end end)
     frame:SetScript("OnHide", function()

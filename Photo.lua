@@ -26,11 +26,17 @@ local BY_ID = {}
 for _, t in ipairs(THEMES) do BY_ID[t.id] = t end
 local BG_LABEL = setmetatable({}, { __index = function(_, k) return BY_ID[k] and BY_ID[k].label or tostring(k) end })
 
--- Animation ids the player model understands
+-- Animation ids the player model understands: { label, id, replay seconds }.
+-- A replay time marks a one-shot emote (wave, bow ...) that is played again until you pick
+-- something else; no replay time means the pose holds on its own (sit, sleep, kneel ...).
 local POSES = {
-    { "Stand", 0 }, { "Walk", 4 }, { "Run", 5 }, { "Wave", 67 }, { "Cheer", 68 }, { "Dance", 69 },
-    { "Laugh", 70 }, { "Bow", 66 }, { "Kneel", 75 }, { "Roar", 74 }, { "Sit", 72 }, { "Applaud", 80 },
+    { "Stand", 0 }, { "Walk", 4 }, { "Run", 5 },
+    { "Salute", 113, 4 }, { "Wave", 67, 4 }, { "Bow", 66, 4 }, { "Cheer", 68, 4 }, { "Applaud", 80, 4 },
+    { "Laugh", 70, 4 }, { "Cry", 77, 5 }, { "Flex", 82, 4 }, { "Shy", 83, 4 }, { "Point", 84, 4 },
+    { "Beg", 79, 4 }, { "Kiss", 76, 4 }, { "Roar", 74, 4 }, { "Rude", 73, 4 }, { "Chicken", 78, 4 },
+    { "Dance", 69 }, { "Sit", 96, nil, 97, 1.0 }, { "Sleep", 71 }, { "Kneel", 75 },
 }
+P.POSES = POSES
 local poseIndex = 1
 local bar, active = nil, false
 
@@ -111,11 +117,94 @@ function P.CycleBackground()
     V.Print("Background: " .. BG_LABEL[V.db.background])
 end
 
+local replayToken = 0
 function P.SetPose(i)
     poseIndex = ((i - 1) % #POSES) + 1
+    local pose = POSES[poseIndex]
     local model = View.GetModel()
-    if model then pcall(model.SetAnimation, model, POSES[poseIndex][2]) end
-    if bar and bar.poseBtn then bar.poseBtn:SetText(POSES[poseIndex][1]) end
+    if model then pcall(model.SetAnimation, model, pose[2]) end
+    if bar and bar.poseBtn then bar.poseBtn:SetText(pose[1]) end
+    if P.poseButtons then
+        for idx, b in pairs(P.poseButtons) do b:SetChecked(idx == poseIndex) end
+    end
+    -- Poses with a lowering-down animation (sit) switch to the held animation once it finishes
+    local hold = pose[4]
+    if hold and C_Timer then
+        local t0 = replayToken + 1
+        C_Timer.After(pose[5] or 1, function()
+            if replayToken ~= t0 then return end
+            local m = View.GetModel()
+            if m then pcall(m.SetAnimation, m, hold) end
+        end)
+    end
+    -- One-shot emotes play once and drop back to standing, so play them again every so often
+    replayToken = replayToken + 1
+    local token = replayToken
+    if pose[3] and C_Timer then
+        local function Again()
+            if token ~= replayToken or not View.IsShown() then return end
+            if V.AFK and V.AFK.IsActive() then return end
+            local m = View.GetModel()
+            if m then pcall(m.SetAnimation, m, pose[2]) end
+            C_Timer.After(pose[3], Again)
+        end
+        C_Timer.After(pose[3], Again)
+    end
+end
+
+-- Back to standing (window closed, photo mode left)
+function P.ClearPose()
+    replayToken = replayToken + 1
+    poseIndex = 1
+    local model = View.GetModel()
+    if model then pcall(model.SetAnimation, model, 0) end
+    if bar and bar.poseBtn then bar.poseBtn:SetText(POSES[1][1]) end
+    if P.poseButtons then for idx, b in pairs(P.poseButtons) do b:SetChecked(idx == 1) end end
+end
+
+-- A small picker with every pose, opened from the Pose button
+local menu
+local function BuildMenu()
+    if menu then return end
+    local parent = View.GetFrame()
+    menu = CreateFrame("Frame", "VanityPoseMenu", parent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+    menu:SetFrameStrata("TOOLTIP")
+    menu:SetClampedToScreen(true)
+    menu:EnableMouse(true)
+    if menu.SetBackdrop then
+        menu:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+        menu:SetBackdropColor(0.05, 0.05, 0.07, 0.96)
+        menu:SetBackdropBorderColor(0.85, 0.65, 0.25, 0.9)
+    end
+    local cols, w, h = 3, 92, 22
+    P.poseButtons = {}
+    for i, pose in ipairs(POSES) do
+        local b = CreateFrame("CheckButton", nil, menu)
+        b:SetSize(w, h)
+        b:SetPoint("TOPLEFT", menu, "TOPLEFT", 8 + ((i - 1) % cols) * (w + 2), -8 - math.floor((i - 1) / cols) * (h + 2))
+        b:SetHighlightTexture("Interface\\Buttons\\WHITE8X8", "ADD")
+        local hl = b:GetHighlightTexture() if hl then hl:SetVertexColor(1, 1, 1, 0.12) end
+        b:SetCheckedTexture("Interface\\Buttons\\WHITE8X8")
+        local ck = b:GetCheckedTexture() if ck then ck:SetVertexColor(0.85, 0.65, 0.25, 0.30) end
+        b.text = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        b.text:SetPoint("CENTER")
+        b.text:SetText(pose[1])
+        b:SetScript("OnClick", function() P.SetPose(i) end)
+        P.poseButtons[i] = b
+    end
+    local rows = math.ceil(#POSES / cols)
+    menu:SetSize(16 + cols * (w + 2) - 2, 16 + rows * (h + 2) - 2)
+    menu:Hide()
+    P.SetPose(poseIndex)
+end
+
+function P.TogglePoseMenu(anchor)
+    View.Build()
+    BuildMenu()
+    if menu:IsShown() then menu:Hide() return end
+    menu:ClearAllPoints()
+    menu:SetPoint("TOPRIGHT", anchor or View.GetFrame(), "BOTTOMRIGHT", 0, -4)
+    menu:Show()
 end
 
 local function MakeBar()
@@ -134,7 +223,7 @@ local function MakeBar()
     bar.bgBtn:SetText(BG_LABEL[V.db.background])
     bar.bgBtn:SetScript("OnClick", P.CycleBackground)
     bar.poseBtn:SetText(POSES[poseIndex][1])
-    bar.poseBtn:SetScript("OnClick", function() P.SetPose(poseIndex + 1) end)
+    bar.poseBtn:SetScript("OnClick", function(self) P.TogglePoseMenu(self) end)
     bar.spinBtn:SetText("Turntable")
     bar.spinBtn:SetScript("OnClick", function() V.db.spin = not V.db.spin V.Print("Turntable " .. (V.db.spin and "on" or "off")) end)
     bar.shotBtn:SetText("Screenshot")
@@ -164,9 +253,8 @@ function P.Leave()
     View.SetPanels(true)
     View.Refresh()
     View.UpdateUI()
-    local model = View.GetModel()
-    if model then pcall(model.SetAnimation, model, 0) end
-    poseIndex = 1
+    if menu then menu:Hide() end
+    P.ClearPose()
     if V.db and V.db.background == "world" then P.ApplyBackground() end
 end
 
@@ -204,4 +292,5 @@ function P.Screenshot()
     end)
 end
 
+V.AddHook("viewHidden", function() if menu then menu:Hide() end P.ClearPose() end)
 V.AddHook("loaded", function() P.ApplyBackground() end)

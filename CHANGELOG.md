@@ -1,5 +1,8 @@
 # Vanity
 
+## v0.5.0
+- New: pose picker. A Pose button on the showcase window (and in photo mode) opens a menu of 22 poses and emotes: salute, wave, bow, cheer, applaud, laugh, cry, flex, shy, point, beg, kiss, roar, rude, chicken, dance, sit, sleep, kneel, plus stand, walk and run. One-shot emotes replay every few seconds until you pick another pose; sit, sleep, kneel and dance hold. Closing the window puts your character back to standing.
+
 ## v0.4.3
 - Shared look: background color picker, 13 new backgrounds with brightness and grain, a gold trim option, and buttons and slots stay visible on a pure black panel.
 
