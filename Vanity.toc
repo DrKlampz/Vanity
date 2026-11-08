@@ -10,6 +10,7 @@
 ## X-License: MIT
 ## X-Wago-ID: kNMPB3Gz
 
+IssueLog.lua
 Core.lua
 Look.lua
 LookSetup.lua

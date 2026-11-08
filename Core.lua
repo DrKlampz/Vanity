@@ -39,6 +39,7 @@ function V.Print(msg) print("|cffd9a441Vanity:|r " .. tostring(msg)) end
 
 local reported = {}
 function V.ReportError(what, err)
+    if V.Issue then V.Issue("lua", what, err) end
     if reported[what] then return end
     reported[what] = true
     V.Print(("|cffff5555Something went wrong in %s:|r %s"):format(what, tostring(err)))
