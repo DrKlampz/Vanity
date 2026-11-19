@@ -1,6 +1,6 @@
 # Vanity
 
-## Unreleased
+## v0.5.5
 - Removed the add-on-to-add-on theming hooks and cross-add-on names from the window look code; the shared look sync between your add-ons works the same.
 - The "Pulse the flair" option now also pulses the edge finish (soft, bevel, double line and glow), not just the corner studs.
 
