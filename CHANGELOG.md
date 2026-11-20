@@ -1,5 +1,9 @@
 # Vanity
 
+## v0.5.11
+
+- Redrawn anarchy symbol with a hand-brushed, worn look
+
 ## v0.5.10
 
 - New background symbols: sword, crossed swords, shield, sun and paw print
