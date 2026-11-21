@@ -9,6 +9,7 @@
 ## SavedVariables: VanityDB
 ## X-License: MIT
 ## X-Wago-ID: kNMPB3Gz
+## X-Curse-Project-ID: 1792040
 
 IssueLog.lua
 Core.lua
