@@ -1,5 +1,10 @@
 # Vanity
 
+## v0.5.12
+
+- Windows share the same look code as the rest of the add-ons, and can be closed in combat. Nothing else changed
+
+
 ## v0.5.11
 
 - Redrawn anarchy symbol with a hand-brushed, worn look
